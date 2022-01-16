@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <SDL.h>
+#include <set>
 using namespace std;
 
 SDL_Window* window = NULL;
@@ -32,7 +33,7 @@ int znajdzNajszerszyKanal(int indeks_poczatkowy, int indeks_koncowy);
 void swap(int i, int j);
 int split(int l, int r, int kanal);
 void quickSort(int l, int r, int kanal);
-void podzielZakresy(int glebokosc, int indeks_poczatkowy, int indeks_koncowy);
+void podzielZakresy(int glebokosc, int start, int stop);
 void kwantyzacja(int indeks_poczatkowy, int indeks_koncowy);
 
 void Funkcja1();
@@ -66,8 +67,8 @@ void wyswieltPalete() {
     }
 
     Uint8 R{}, G{}, B{};
-
-    if (dopasowanychKolorow)
+    /*
+    if(dopasowanychKolorow)
         for (int x = 0; x < szerokosc; x++) {
             if (x % (szerokosc / dopasowanychKolorow) == 0 and x != 0)
                 i++;
@@ -76,7 +77,7 @@ void wyswieltPalete() {
             }
         }
 
-    if (ileKolorow and ileKolorow < szerokosc)
+    if(ileKolorow and ileKolorow < szerokosc)
         for (int x = 0; x < szerokosc; x++) {
             if (x % (szerokosc / ileKolorow) == 0 and x != 0)
                 i++;
@@ -85,6 +86,7 @@ void wyswieltPalete() {
                 setPixel(x, y + wysokosc / 16, paleta[i].r, paleta[i].g, paleta[i].b);
             }
         }
+        */
 }
 
 int znajdzNajszerszyKanal(int indeks_poczatkowy, int indeks_koncowy) {
@@ -186,7 +188,7 @@ void quickSort(int l, int r, int kanal) {
 
     if (l < r) {
         int pivot = split(l, r, kanal);
-        quickSort(l, pivot - 1, kanal);
+        quickSort(l, pivot, kanal);
         quickSort(pivot + 1, r, kanal);
     }
 
@@ -219,8 +221,8 @@ void podzielZakresy(int glebokosc, int start_indeks, int end_indeks) {
         return;
     }
 
-    int kanal = znajdzNajszerszyKanal(start_indeks, end_indeks);
-    quickSort(start_indeks, end_indeks, kanal);
+    int kanal = znajdzNajszerszyKanal(start_indeks, end_indeks - 1);
+    quickSort(start_indeks, end_indeks - 1, kanal);
     int mediana_indeksow = ((start_indeks + end_indeks) + 1) / 2;
 
     podzielZakresy(glebokosc - 1, start_indeks, mediana_indeksow - 1);
@@ -229,18 +231,53 @@ void podzielZakresy(int glebokosc, int start_indeks, int end_indeks) {
 }
 
 void medianCut() {
+
+    //int kanal = znajdzNajszerszyKanal(0, ileKolorow - 1);
+    //quickSort(0, ileKolorow - 1, kanal);
     if (ileKolorow > 32)
         podzielZakresy(5, 0, ileKolorow - 1);
-    else
-        for (int i = 0; i < ileKolorow; i++) {
-            dopasowanaPaleta[i] = paleta[i];
-            dopasowanychKolorow = ileKolorow;
-        }
+}
+
+void grelaKolor() {
+    //set<SDL_Color> paletka;
+    //SDL_Color kolor;
+    //for (int y = 0; y < wysokosc / 2; y++) {
+    //    for (int x = 0; x < szerokosc / 2; x++) {
+    //        kolor = getPixel(x, y);
+    //        paletka.insert(kolor);
+    //    }
+    //}
+
+    //cout << "kurwakurwa"<<paletka.size();
+
 }
 
 int znajdzNajlbizszegoSasiada(SDL_Color kolor) {
+    int minRoznica = INT_MAX;
+    int roznica{};
+    int minIndeks{};
 
-    return 1;
+
+    //cout << "KOLOR: [" << (int)kolor.r << "," << (int)kolor.g << "," << (int)kolor.b << "]"<< endl;
+
+    for (int i = 0; i < dopasowanychKolorow; i++) {
+        roznica += abs((int)kolor.r - (int)dopasowanaPaleta[i].r);
+        roznica += abs((int)kolor.g - (int)dopasowanaPaleta[i].g);
+        roznica += abs((int)kolor.b - (int)dopasowanaPaleta[i].b);
+
+        //cout << "Roznica: " << roznica<<endl;
+
+        if (roznica < minRoznica) {
+            minIndeks = i;
+            minRoznica = roznica;
+        }
+        //cout << i << ": [" << (int)dopasowanaPaleta[i].r << "," << (int)dopasowanaPaleta[i].g << "," << (int)dopasowanaPaleta[i].b << "]      "<< roznica << endl;
+
+        roznica = 0;
+    }
+    //cout << "Roznica min: " << minRoznica<<"  "<<minIndeks<<endl;
+
+    return minIndeks;
 }
 
 void Funkcja1() {
@@ -338,8 +375,22 @@ void Funkcja6() {
         }
     }
 
+    //wyswieltPalete();
     medianCut();
-    wyswieltPalete();
+    //wyswieltPalete();
+
+    int dopasowanyIndeks{};
+    for (int y = 0; y < wysokosc / 2; y++) {
+        for (int x = 0; x < szerokosc / 2; x++) {
+            kolor = getPixel(x, y);
+            dopasowanyIndeks = znajdzNajlbizszegoSasiada(kolor);
+            //cout << dopasowanyIndeks << ": [" << (int)dopasowanaPaleta[dopasowanyIndeks].r << "," << (int)dopasowanaPaleta[dopasowanyIndeks].g << "," << (int)dopasowanaPaleta[dopasowanyIndeks].b << "]" << endl;
+            setPixel(x + szerokosc / 2, y, dopasowanaPaleta[dopasowanyIndeks].r, dopasowanaPaleta[dopasowanyIndeks].g, dopasowanaPaleta[dopasowanyIndeks].b);
+        }
+    }
+
+    //wyswieltPalete();
+    grelaKolor();
 
     SDL_UpdateWindowSurface(window);
 }
@@ -368,7 +419,7 @@ void Funkcja9() {
 int dodajKolor(SDL_Color kolor) {
     int aktualnyKolor = ileKolorow;
     paleta[aktualnyKolor] = kolor;
-    cout << aktualnyKolor << ": [" << (int)kolor.r << "," << (int)kolor.g << "," << (int)kolor.b << "]" << endl;
+    //cout << aktualnyKolor << ": [" << (int)kolor.r << "," << (int)kolor.g << "," << (int)kolor.b << "]" << endl;
     ileKolorow++;
     return (aktualnyKolor);
 }
