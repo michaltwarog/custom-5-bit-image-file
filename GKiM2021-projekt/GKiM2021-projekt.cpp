@@ -27,6 +27,14 @@ int dodajKolor(SDL_Color kolor);
 bool porownajKolory(SDL_Color k1, SDL_Color k2);
 int sprawdzKolor(SDL_Color kolor);
 
+void kwantyzacja(int indeks_poczatkowy, int indeks_koncowy);
+int znajdzNajszerszyKanal(int indeks_poczatkowy, int indeks_koncowy);
+void swap(int i, int j);
+int split(int l, int r, int kanal);
+void quickSort(int l, int r, int kanal);
+void podzielZakresy(int glebokosc, int indeks_poczatkowy, int indeks_koncowy);
+void kwantyzacja(int indeks_poczatkowy, int indeks_koncowy);
+
 void Funkcja1();
 void Funkcja2();
 void Funkcja3();
@@ -37,9 +45,203 @@ void Funkcja7();
 void Funkcja8();
 void Funkcja9();
 
-
-SDL_Color paleta[256];
+SDL_Color paleta[szerokosc / 2 * wysokosc / 2];
+SDL_Color dopasowanaPaleta[32];
 int ileKolorow = 0;
+int dopasowanychKolorow = 0;
+
+void wyswieltPalete() {
+    int i = 0;
+
+    cout << "Zwykla:\n";
+    for (int i = 0; i < ileKolorow; i++) {
+        cout << i << ": [" << (int)paleta[i].r << "," << (int)paleta[i].g << "," << (int)paleta[i].b << "]" << endl;
+
+    }
+
+    cout << "Dopasowana:\n";
+    for (int i = 0; i < dopasowanychKolorow; i++) {
+        cout << i << ": [" << (int)dopasowanaPaleta[i].r << "," << (int)dopasowanaPaleta[i].g << "," << (int)dopasowanaPaleta[i].b << "]" << endl;
+
+    }
+
+    Uint8 R{}, G{}, B{};
+
+    if (dopasowanychKolorow)
+        for (int x = 0; x < szerokosc; x++) {
+            if (x % (szerokosc / dopasowanychKolorow) == 0 and x != 0)
+                i++;
+            for (int y = 0; y < wysokosc / 16; y++) {
+                setPixel(x, y, dopasowanaPaleta[i].r, dopasowanaPaleta[i].g, dopasowanaPaleta[i].b);
+            }
+        }
+
+    if (ileKolorow and ileKolorow < szerokosc)
+        for (int x = 0; x < szerokosc; x++) {
+            if (x % (szerokosc / ileKolorow) == 0 and x != 0)
+                i++;
+            for (int y = 0; y < wysokosc / 16; y++) {
+
+                setPixel(x, y + wysokosc / 16, paleta[i].r, paleta[i].g, paleta[i].b);
+            }
+        }
+}
+
+int znajdzNajszerszyKanal(int indeks_poczatkowy, int indeks_koncowy) {
+    int r_min, g_min, b_min;
+    r_min = g_min = b_min = INT_MAX;
+    int r_max, g_max, b_max;
+    r_max = g_max = b_max = INT_MIN;
+    int r_zakres, g_zakres, b_zakres;
+    int wielkosc = indeks_koncowy - indeks_poczatkowy;
+
+    //zakres r
+    for (int i = indeks_poczatkowy; i <= indeks_koncowy; i++) {
+
+        //kanał czerwony
+        if ((int)paleta[i].r > r_max)
+            r_max = (int)paleta[i].r;
+        if ((int)paleta[i].r < r_min)
+            r_min = (int)paleta[i].r;
+
+        //kanał zielony
+        if ((int)paleta[i].g > g_max)
+            g_max = (int)paleta[i].g;
+        if ((int)paleta[i].g < g_min)
+            g_min = (int)paleta[i].g;
+
+        //kanał niebieski
+        if ((int)paleta[i].b > b_max)
+            b_max = (int)paleta[i].b;
+        if ((int)paleta[i].b < b_min)
+            b_min = (int)paleta[i].b;
+
+    }
+
+    r_zakres = r_max - r_min;
+    g_zakres = g_max - g_min;
+    b_zakres = b_max - b_min;
+
+    //kanał pierwszy największy zakres
+    if (r_zakres >= g_zakres and r_zakres >= b_zakres)
+        return 0;
+
+    //kanał 2 największy zakres
+    else if (g_zakres >= b_zakres and g_zakres >= g_zakres)
+        return 1;
+
+    //kanał 3 największy zakres
+    else if (b_zakres >= r_zakres and b_zakres >= g_zakres)
+        return 2;
+
+}
+
+void swap(int i, int j) {
+
+    SDL_Color temp = paleta[j];
+    paleta[j] = paleta[i];
+    paleta[i] = temp;
+
+}
+
+int split(int l, int r, int kanal) {
+
+    int pivot_index = l + ((r - l) / 2);
+    swap(pivot_index, r);
+
+    int pivot = 0;
+    if (kanal == 0)
+        pivot = paleta[r].r;
+    else if (kanal == 1)
+        pivot = paleta[r].g;
+    else
+        pivot = paleta[r].b;
+
+    int i = l;
+
+    for (int j = l; j < r; j++) {
+
+        if (kanal == 0 and paleta[j].r < pivot) {
+            swap(j, i);
+            i++;
+        }
+
+        else if (kanal == 1 and paleta[j].g < pivot) {
+            swap(j, i);
+            i++;
+        }
+
+        else if (kanal == 2 and paleta[j].b < pivot) {
+            swap(j, i);
+            i++;
+        }
+    }
+
+    swap(i, r);
+    return i;
+
+}
+
+void quickSort(int l, int r, int kanal) {
+
+    if (l < r) {
+        int pivot = split(l, r, kanal);
+        quickSort(l, pivot - 1, kanal);
+        quickSort(pivot + 1, r, kanal);
+    }
+
+}
+
+void kwantyzacja(int indeks_poczatkowy, int indeks_koncowy) {
+    int srednia_r{}, srednia_g{}, srednia_b{};
+    int wielkosc = indeks_koncowy - indeks_poczatkowy;
+    for (int i = indeks_poczatkowy; i <= indeks_koncowy; i++) {
+        srednia_r += paleta[i].r;
+        srednia_g += paleta[i].g;
+        srednia_b += paleta[i].b;
+    }
+    srednia_r /= wielkosc;
+    srednia_g /= wielkosc;
+    srednia_b /= wielkosc;
+
+    dopasowanaPaleta[dopasowanychKolorow].r = srednia_r;
+    dopasowanaPaleta[dopasowanychKolorow].g = srednia_g;
+    dopasowanaPaleta[dopasowanychKolorow].b = srednia_b;
+    dopasowanychKolorow++;
+}
+
+void podzielZakresy(int glebokosc, int start_indeks, int end_indeks) {
+    if (glebokosc < 0 or end_indeks - start_indeks == 0)
+        return;
+
+    if (glebokosc == 0) {
+        kwantyzacja(start_indeks, end_indeks);  //dopisać zakres do przesłania 
+        return;
+    }
+
+    int kanal = znajdzNajszerszyKanal(start_indeks, end_indeks);
+    quickSort(start_indeks, end_indeks, kanal);
+    int mediana_indeksow = ((start_indeks + end_indeks) + 1) / 2;
+
+    podzielZakresy(glebokosc - 1, start_indeks, mediana_indeksow - 1);
+    podzielZakresy(glebokosc - 1, mediana_indeksow - 1, end_indeks);
+
+}
+
+void medianCut() {
+    if (ileKolorow > 32)
+        podzielZakresy(5, 0, ileKolorow - 1);
+    else
+        for (int i = 0; i < ileKolorow; i++) {
+            dopasowanaPaleta[i] = paleta[i];
+            dopasowanychKolorow = ileKolorow;
+        }
+}
+
+int znajdzNajlbizszegoSasiada(SDL_Color kolor) {
+
+    return 1;
+}
 
 void Funkcja1() {
 
@@ -50,7 +252,52 @@ void Funkcja1() {
 
 void Funkcja2() {
 
-    //...
+    SDL_Color kolor;
+    Uint8 wartosc;
+    int R, G, B;
+    ileKolorow = 0;
+
+    for (int y = 0; y < wysokosc / 2; y++)
+    {
+        for (int x = 0; x < szerokosc / 2; x++)
+        {
+            kolor = getPixel(x, y);
+            R = kolor.r;
+            G = kolor.g;
+            B = kolor.b;
+
+            // czerwony, zielony: 8bit (0-255) -> 3bit(0-7)
+            //                    10111111     -> 101   /   10100000 -> 101   
+
+            //R = R >> 5;
+            //G = G >> 5;
+            //B = B >> 6;
+            //RRGGB
+            R = round(R * 3.0 / 255.0);
+            G = round(G * 3.0 / 255.0);
+            B = round(B * 1.0 / 255.0);
+
+            //wartosc = (R << 5) + (G << 2) + B;
+
+            // 101 -> 10100000
+            //R = R << 5;
+            //G = G << 5;
+            //B = B << 6;
+
+            R = R * 255.0 / 3.0;
+            G = G * 255.0 / 3.0;
+            B = B * 255.0 / 1.0;
+
+            kolor.r = R;
+            kolor.g = G;
+            kolor.b = B;
+            sprawdzKolor(kolor);
+            setPixel(x + (szerokosc / 2), y, R, G, B);
+
+        }
+    }
+
+    //wyswieltPalete();
 
     SDL_UpdateWindowSurface(window);
 }
@@ -76,9 +323,23 @@ void Funkcja5() {
     SDL_UpdateWindowSurface(window);
 }
 
+//https://muthu.co/reducing-the-number-of-colors-of-an-image-using-median-cut-algorithm/
 void Funkcja6() {
 
-    //...
+    ileKolorow = 0;
+    dopasowanychKolorow = 0;
+    SDL_Color kolor;
+    Uint8 wartosc;
+
+    for (int y = 0; y < wysokosc / 2; y++) {
+        for (int x = 0; x < szerokosc / 2; x++) {
+            kolor = getPixel(x, y);
+            wartosc = sprawdzKolor(kolor);
+        }
+    }
+
+    medianCut();
+    wyswieltPalete();
 
     SDL_UpdateWindowSurface(window);
 }
@@ -134,6 +395,7 @@ int sprawdzKolor(SDL_Color kolor) {
     }
     return wynik;
 }
+
 
 
 void setPixel(int x, int y, Uint8 R, Uint8 G, Uint8 B)
@@ -355,7 +617,8 @@ int main(int argc, char* argv[]) {
     bool done = false;
     SDL_Event event;
     // główna pętla programu
-    while (SDL_WaitEvent(&event)) {
+    while (!done) {
+        SDL_WaitEvent(&event);
         // sprawdzamy czy pojawiło się zdarzenie
         switch (event.type) {
         case SDL_QUIT:
