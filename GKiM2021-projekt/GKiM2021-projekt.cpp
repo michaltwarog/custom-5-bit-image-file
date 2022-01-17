@@ -27,14 +27,14 @@ void czyscEkran(Uint8 R, Uint8 G, Uint8 B);
 int dodajKolor(SDL_Color kolor);
 bool porownajKolory(SDL_Color k1, SDL_Color k2);
 int sprawdzKolor(SDL_Color kolor);
+void znajdzWszystkieKolory();
 
-void kwantyzacja(int indeks_poczatkowy, int indeks_koncowy);
+void podzielZakresy(int glebokosc, int indeks_poczatkowy, int indeks_koncowy);
 int znajdzNajszerszyKanal(int indeks_poczatkowy, int indeks_koncowy);
+void kwantyzacja(int indeks_poczatkowy, int indeks_koncowy);
 void swap(int i, int j);
 int split(int l, int r, int kanal);
 void quickSort(int l, int r, int kanal);
-void podzielZakresy(int glebokosc, int start, int stop);
-void kwantyzacja(int indeks_poczatkowy, int indeks_koncowy);
 
 void Funkcja1();
 void Funkcja2();
@@ -50,9 +50,10 @@ SDL_Color paleta[szerokosc / 2 * wysokosc / 2];
 SDL_Color dopasowanaPaleta[32];
 int ileKolorow = 0;
 int dopasowanychKolorow = 0;
+int dopasowana = false;
 
-void wyswieltPalete() {
-    int i = 0;
+// uzywana do debuggowania, wypisuje w konsoli wartosci kolorow
+void wypiszPalete() {
 
     cout << "Zwykla:\n";
     for (int i = 0; i < ileKolorow; i++) {
@@ -65,54 +66,75 @@ void wyswieltPalete() {
         cout << i << ": [" << (int)dopasowanaPaleta[i].r << "," << (int)dopasowanaPaleta[i].g << "," << (int)dopasowanaPaleta[i].b << "]" << endl;
 
     }
+}
 
+// wyswietl palete uzywana podczas konwersji obrazka
+void wyswieltPalete() {
+    int i = 0;
     Uint8 R{}, G{}, B{};
-    /*
-    if(dopasowanychKolorow)
+
+    // jesli uzyta zostala dopasowana paleta wyswietl ja
+    if (dopasowana and dopasowanychKolorow > 0)
         for (int x = 0; x < szerokosc; x++) {
             if (x % (szerokosc / dopasowanychKolorow) == 0 and x != 0)
                 i++;
             for (int y = 0; y < wysokosc / 16; y++) {
-                setPixel(x, y, dopasowanaPaleta[i].r, dopasowanaPaleta[i].g, dopasowanaPaleta[i].b);
+                setPixel(x, y + wysokosc / 2, dopasowanaPaleta[i].r, dopasowanaPaleta[i].g, dopasowanaPaleta[i].b);
             }
         }
 
-    if(ileKolorow and ileKolorow < szerokosc)
+    // jesli uzyta zostala narzucona paleta wyswietl ja
+    if (!dopasowana and ileKolorow > 0 and ileKolorow < szerokosc)
         for (int x = 0; x < szerokosc; x++) {
             if (x % (szerokosc / ileKolorow) == 0 and x != 0)
                 i++;
             for (int y = 0; y < wysokosc / 16; y++) {
 
-                setPixel(x, y + wysokosc / 16, paleta[i].r, paleta[i].g, paleta[i].b);
+                setPixel(x, y + +wysokosc / 2, paleta[i].r, paleta[i].g, paleta[i].b);
             }
         }
-        */
+
 }
 
-int znajdzNajszerszyKanal(int indeks_poczatkowy, int indeks_koncowy) {
-    int r_min, g_min, b_min;
-    r_min = g_min = b_min = INT_MAX;
-    int r_max, g_max, b_max;
-    r_max = g_max = b_max = INT_MIN;
-    int r_zakres, g_zakres, b_zakres;
-    int wielkosc = indeks_koncowy - indeks_poczatkowy;
+//funkcja zapisuje wszystkie unikatowe kolory palecie
+void znajdzWszystkieKolory() {
+    SDL_Color kolor;
+    ileKolorow = 0;
 
-    //zakres r
+    for (int y = 0; y < wysokosc / 2; y++) {
+        for (int x = 0; x < szerokosc / 2; x++) {
+            kolor = getPixel(x, y);
+            sprawdzKolor(kolor);
+        }
+    }
+}
+
+//Funkcja odszukuje kanał cechujacy sie najwiekszym zakresem barw i zwraca jego indeks
+int znajdzNajszerszyKanal(int indeks_poczatkowy, int indeks_koncowy) {
+
+    int r_min, g_min, b_min;            // najmniejsze znalezione wartosci dla poszczegolnych kanalow 
+    int r_max, g_max, b_max;            // najwieksze znalezione wartosci dla poszczegolnych kanalow
+    int r_zakres, g_zakres, b_zakres;   // znalezione zakresy dla poszczegolnych kanalow
+    int wielkosc = indeks_koncowy - indeks_poczatkowy;  // ilosc rozpatrywanych kolorow
+
+    r_min = g_min = b_min = INT_MAX;
+    r_max = g_max = b_max = INT_MIN;
+
     for (int i = indeks_poczatkowy; i <= indeks_koncowy; i++) {
 
-        //kanał czerwony
+        //kanal czerwony
         if ((int)paleta[i].r > r_max)
             r_max = (int)paleta[i].r;
         if ((int)paleta[i].r < r_min)
             r_min = (int)paleta[i].r;
 
-        //kanał zielony
+        //kanal zielony
         if ((int)paleta[i].g > g_max)
             g_max = (int)paleta[i].g;
         if ((int)paleta[i].g < g_min)
             g_min = (int)paleta[i].g;
 
-        //kanał niebieski
+        //kanal niebieski
         if ((int)paleta[i].b > b_max)
             b_max = (int)paleta[i].b;
         if ((int)paleta[i].b < b_min)
@@ -124,20 +146,21 @@ int znajdzNajszerszyKanal(int indeks_poczatkowy, int indeks_koncowy) {
     g_zakres = g_max - g_min;
     b_zakres = b_max - b_min;
 
-    //kanał pierwszy największy zakres
+    //kanał pierwszy(R) najwiekszy zakres
     if (r_zakres >= g_zakres and r_zakres >= b_zakres)
         return 0;
 
-    //kanał 2 największy zakres
+    //kanał drugi(G) najwiekszy zakres
     else if (g_zakres >= b_zakres and g_zakres >= g_zakres)
         return 1;
 
-    //kanał 3 największy zakres
+    //kanał trzeci(B) najwiekszy zakres
     else if (b_zakres >= r_zakres and b_zakres >= g_zakres)
         return 2;
 
 }
 
+// zamiana wartosci pod indeksami i oraz j w podstawowej palecie
 void swap(int i, int j) {
 
     SDL_Color temp = paleta[j];
@@ -146,12 +169,16 @@ void swap(int i, int j) {
 
 }
 
+// funkcja split dla algorytmu quicksort, sortowanie wzgledem jednego kanalu
 int split(int l, int r, int kanal) {
 
+    // wyznacz indeks pivotu na wartosc srodkowa zakresu
     int pivot_index = l + ((r - l) / 2);
     swap(pivot_index, r);
 
     int pivot = 0;
+
+    // pivot ustaw na wartosc odpowiedniego elementu w tabeli oraz odpowiedniej skladowej
     if (kanal == 0)
         pivot = paleta[r].r;
     else if (kanal == 1)
@@ -161,6 +188,7 @@ int split(int l, int r, int kanal) {
 
     int i = l;
 
+    // sortowania wzgledem jednego kanalu
     for (int j = l; j < r; j++) {
 
         if (kanal == 0 and paleta[j].r < pivot) {
@@ -184,98 +212,113 @@ int split(int l, int r, int kanal) {
 
 }
 
+// algorytm szybkiego sortowania, sortowanie wzgledem jednego kanalu
 void quickSort(int l, int r, int kanal) {
 
-    if (l < r) {
+    //rekurencja ogonowa
+    while (l < r) {
         int pivot = split(l, r, kanal);
-        quickSort(l, pivot, kanal);
-        quickSort(pivot + 1, r, kanal);
+        quickSort(l, pivot - 1, kanal);
+        l = pivot + 1;
     }
 
 }
 
+// kwantyzacja koloru w podanym zakresie
 void kwantyzacja(int indeks_poczatkowy, int indeks_koncowy) {
-    int srednia_r{}, srednia_g{}, srednia_b{};
-    int wielkosc = indeks_koncowy - indeks_poczatkowy;
+
+    int srednia_r{}, srednia_g{}, srednia_b{};          // srednie wartosci skladowych w podanym zakresie
+    int wielkosc = indeks_koncowy - indeks_poczatkowy;  // wielkosc badanego zakresu
+
+
+    // wyliczanie sumy dla kazdej ze skladowych
     for (int i = indeks_poczatkowy; i <= indeks_koncowy; i++) {
         srednia_r += paleta[i].r;
         srednia_g += paleta[i].g;
         srednia_b += paleta[i].b;
     }
+
+    // liczenie sredniej kazdej ze skladowych
     srednia_r /= wielkosc;
     srednia_g /= wielkosc;
     srednia_b /= wielkosc;
 
+    // dopisywanie nowego kolory do dopasowanej palety
     dopasowanaPaleta[dopasowanychKolorow].r = srednia_r;
     dopasowanaPaleta[dopasowanychKolorow].g = srednia_g;
     dopasowanaPaleta[dopasowanychKolorow].b = srednia_b;
     dopasowanychKolorow++;
 }
 
-void podzielZakresy(int glebokosc, int start_indeks, int end_indeks) {
-    if (glebokosc < 0 or end_indeks - start_indeks == 0)
+// dzielenie palety na mniejsze czesci i sortowanie tych czesci wzgledem najszerszych kanalow
+void podzielZakresy(int glebokosc, int indeks_poczatkowy, int indeks_koncowy) {
+
+    // przerwij oczekiwana ilosc barw zostala osiagnieta badz zakres jest niepoprawny
+    if (glebokosc < 0 or indeks_koncowy - indeks_poczatkowy <= 0)
         return;
 
+    // jesli paleta zostala podzielona na odpowiednie czesci zacznij kwantyzacje
     if (glebokosc == 0) {
-        kwantyzacja(start_indeks, end_indeks);  //dopisać zakres do przesłania 
+        kwantyzacja(indeks_poczatkowy, indeks_koncowy);
         return;
     }
 
-    int kanal = znajdzNajszerszyKanal(start_indeks, end_indeks - 1);
-    quickSort(start_indeks, end_indeks - 1, kanal);
-    int mediana_indeksow = ((start_indeks + end_indeks) + 1) / 2;
+    // odszukaj najszerszy kanal i sortuj wzgledem niego
+    int kanal = znajdzNajszerszyKanal(indeks_poczatkowy, indeks_koncowy);
+    quickSort(indeks_poczatkowy, indeks_koncowy, kanal);
 
-    podzielZakresy(glebokosc - 1, start_indeks, mediana_indeksow - 1);
-    podzielZakresy(glebokosc - 1, mediana_indeksow - 1, end_indeks);
+    // znajdz srodek badanego zakresu
+    int mediana_indeksow = ((indeks_poczatkowy + indeks_koncowy) + 1) / 2;
+
+    // dokonaj kolejnego podzialu
+    podzielZakresy(glebokosc - 1, indeks_poczatkowy, mediana_indeksow);
+    podzielZakresy(glebokosc - 1, mediana_indeksow, indeks_koncowy);
 
 }
 
+// algorytm median cut do odnajdywania dopasowanej palety
 void medianCut() {
 
-    //int kanal = znajdzNajszerszyKanal(0, ileKolorow - 1);
-    //quickSort(0, ileKolorow - 1, kanal);
+    // na ilu bitach ma sie miescic nowy kolor
+    int ileBit = 5;
+
+    dopasowanychKolorow = 0;
+    znajdzWszystkieKolory();
+
+    // jesli na obrazku jest wiecej kolorow szukaj palety
     if (ileKolorow > 32)
-        podzielZakresy(5, 0, ileKolorow - 1);
-}
-
-void grelaKolor() {
-    //set<SDL_Color> paletka;
-    //SDL_Color kolor;
-    //for (int y = 0; y < wysokosc / 2; y++) {
-    //    for (int x = 0; x < szerokosc / 2; x++) {
-    //        kolor = getPixel(x, y);
-    //        paletka.insert(kolor);
-    //    }
-    //}
-
-    //cout << "kurwakurwa"<<paletka.size();
+        podzielZakresy(ileBit, 0, ileKolorow - 1);
+    else {
+        for (int i = 0; i < ileKolorow; i++)
+            dopasowanaPaleta[i] = paleta[i];
+        dopasowanychKolorow = ileKolorow;
+    }
 
 }
 
+// znajdz najblizszego sasiada w dopasowanej palecie i zwroc jego indeks
 int znajdzNajlbizszegoSasiada(SDL_Color kolor) {
-    int minRoznica = INT_MAX;
-    int roznica{};
-    int minIndeks{};
+    int minRoznica = INT_MAX;   // minimalna roznica znaleziona w 
+    int roznica{};              // roznica liczona w kazdej iteracji
+    int minIndeks{};            // indeks najblizszego znalezionego koloru
 
 
-    //cout << "KOLOR: [" << (int)kolor.r << "," << (int)kolor.g << "," << (int)kolor.b << "]"<< endl;
-
+    // przeszukaj cala palete dopasowanych barw 
     for (int i = 0; i < dopasowanychKolorow; i++) {
+
+        // sumuj roznice dla poszczegolnych skladowych koloru
+        roznica = 0;
         roznica += abs((int)kolor.r - (int)dopasowanaPaleta[i].r);
         roznica += abs((int)kolor.g - (int)dopasowanaPaleta[i].g);
         roznica += abs((int)kolor.b - (int)dopasowanaPaleta[i].b);
 
-        //cout << "Roznica: " << roznica<<endl;
-
+        // sprawdz czy aktualna roznica jest minimalna
         if (roznica < minRoznica) {
             minIndeks = i;
             minRoznica = roznica;
         }
-        //cout << i << ": [" << (int)dopasowanaPaleta[i].r << "," << (int)dopasowanaPaleta[i].g << "," << (int)dopasowanaPaleta[i].b << "]      "<< roznica << endl;
 
-        roznica = 0;
     }
-    //cout << "Roznica min: " << minRoznica<<"  "<<minIndeks<<endl;
 
     return minIndeks;
 }
@@ -290,9 +333,9 @@ void Funkcja1() {
 void Funkcja2() {
 
     SDL_Color kolor;
-    Uint8 wartosc;
     int R, G, B;
     ileKolorow = 0;
+    dopasowana = false;
 
     for (int y = 0; y < wysokosc / 2; y++)
     {
@@ -303,24 +346,13 @@ void Funkcja2() {
             G = kolor.g;
             B = kolor.b;
 
-            // czerwony, zielony: 8bit (0-255) -> 3bit(0-7)
-            //                    10111111     -> 101   /   10100000 -> 101   
-
-            //R = R >> 5;
-            //G = G >> 5;
-            //B = B >> 6;
-            //RRGGB
+            // RRGGB
+            // Szukanie arytmetycznie najblizszego sasiada danej wartosci
             R = round(R * 3.0 / 255.0);
             G = round(G * 3.0 / 255.0);
             B = round(B * 1.0 / 255.0);
 
-            //wartosc = (R << 5) + (G << 2) + B;
-
-            // 101 -> 10100000
-            //R = R << 5;
-            //G = G << 5;
-            //B = B << 6;
-
+            // przeksztalcenie z powrotem na liczbe w pelnym zakresie
             R = R * 255.0 / 3.0;
             G = G * 255.0 / 3.0;
             B = B * 255.0 / 1.0;
@@ -328,13 +360,15 @@ void Funkcja2() {
             kolor.r = R;
             kolor.g = G;
             kolor.b = B;
+
+            // dodaj kolor do palety
             sprawdzKolor(kolor);
             setPixel(x + (szerokosc / 2), y, R, G, B);
 
         }
     }
 
-    //wyswieltPalete();
+    wyswieltPalete();
 
     SDL_UpdateWindowSurface(window);
 }
@@ -363,34 +397,22 @@ void Funkcja5() {
 //https://muthu.co/reducing-the-number-of-colors-of-an-image-using-median-cut-algorithm/
 void Funkcja6() {
 
-    ileKolorow = 0;
-    dopasowanychKolorow = 0;
-    SDL_Color kolor;
-    Uint8 wartosc;
-
-    for (int y = 0; y < wysokosc / 2; y++) {
-        for (int x = 0; x < szerokosc / 2; x++) {
-            kolor = getPixel(x, y);
-            wartosc = sprawdzKolor(kolor);
-        }
-    }
-
-    //wyswieltPalete();
-    medianCut();
-    //wyswieltPalete();
-
     int dopasowanyIndeks{};
+    SDL_Color kolor;
+
+    // skorzytaj z algorytu median cut do dopasowania palety
+    dopasowana = true;
+    medianCut();
+
     for (int y = 0; y < wysokosc / 2; y++) {
         for (int x = 0; x < szerokosc / 2; x++) {
             kolor = getPixel(x, y);
             dopasowanyIndeks = znajdzNajlbizszegoSasiada(kolor);
-            //cout << dopasowanyIndeks << ": [" << (int)dopasowanaPaleta[dopasowanyIndeks].r << "," << (int)dopasowanaPaleta[dopasowanyIndeks].g << "," << (int)dopasowanaPaleta[dopasowanyIndeks].b << "]" << endl;
             setPixel(x + szerokosc / 2, y, dopasowanaPaleta[dopasowanyIndeks].r, dopasowanaPaleta[dopasowanyIndeks].g, dopasowanaPaleta[dopasowanyIndeks].b);
         }
     }
 
-    //wyswieltPalete();
-    grelaKolor();
+    wyswieltPalete();
 
     SDL_UpdateWindowSurface(window);
 }
