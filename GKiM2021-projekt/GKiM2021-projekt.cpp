@@ -79,36 +79,88 @@ SDL_Color* createpalette() {
     }
     return palette;
 }
-SDL_Color closest(SDL_Color kolor) {
+void closest(int*R,int*G,int*B, int *bladR, int*bladG,int*bladB) {
     
     SDL_Color* palette = createpalette();
     
   
-    int oldR = kolor.r, oldG = kolor.g, oldB = kolor.b;
+   // int oldR = kolor.r, oldG = kolor.g, oldB = kolor.b;
     int diffR = 0, diffG = 0, diffB = 0;
     int smallestDiffR = 255, smallestDiffG = 255, smallestDiffB = 255;
+    //int R = kolor.r, B = kolor.b, G = kolor.g;
+    //R 0, 85, 171, 255
+   
+    if (*R < 43) {
+        *bladR = *R;
+        *R = 0;
+    }
+    else if (*R >= 43 && *R < 128) {
+        *bladR = *R - 85;
+        *R = 85;
+    }
+    else if (*R >= 128 && *R < 214) {
+        *bladR = *R - 171;
+        *R = 171;
+    }
+    else {
+        *bladR = *R - 255;
+        *R = 255;
+    }
+
+    //G 0, 85, 171, 255
+    if (*G < 43) {
+        *bladG = *G;
+        *G = 0;
+    }
+    else if (*G >= 43 && *G < 128) {
+        *bladG = *G - 85;
+        *G = 85;
+    }
+    else if (*G >= 128 && *G < 214) {
+        *bladG = *G - 171;
+        *G = 171;
+    }
+    else {
+        *bladG = *G - 255;
+        *G = 255;
+    }
+
+    //B 0, 255
+    if (*B < 128) { //128 bo 255/2
+        *bladB = *B;
+        *B = 0;
+    }
+    else {
+        *bladB = *B - 255;
+        *B = 255;
+    }
+    /*
     for (int i = 0; i < 32; i++) {
         diffR = abs(oldR - palette[i].r);
-        if (palette[i].r<=oldR) {//(diffR < smallestDiffR)
+        if (diffR < smallestDiffR) {
             smallestDiffR = diffR;
             kolor.r = palette[i].r;
         }
 
         diffG= abs(oldG - palette[i].g);
-        if (palette[i].g <= oldG) {//(diffG < smallestDiffG)
+        if (diffG < smallestDiffG) {
             smallestDiffG = diffG;
             kolor.g = palette[i].g;
         }
 
         diffB = abs(oldB - palette[i].b);
-        if (palette[i].b <= oldB) {//(diffB < smallestDiffB)
+        if (diffB < smallestDiffB) {
             smallestDiffB = diffB;
             kolor.b = palette[i].b;
         }
 
+
     }
-    
-    return kolor;
+    */
+   // kolor.r = R;
+    //kolor.g = G;
+   // kolor.b = B;
+    //return kolor;
 }
 void Funkcja3() {
 
@@ -135,15 +187,16 @@ void Funkcja3() {
             R = kolor.r + bledyR[x + przesuniecie][y];
             G = kolor.g + bledyG[x + przesuniecie][y];
             B = kolor.b + bledyB[x + przesuniecie][y];
-            int oldR = R, oldG = G, oldB = B;
-
-            kolor=closest(kolor);
-
-            bladR = oldR - kolor.r;
-            bladG = oldG - kolor.g;
-            bladB = oldB - kolor.b;
+            int oldR = kolor.r, oldG = kolor.g, oldB = kolor.b;
+            kolor.r = R;
+            kolor.g = G;
+            kolor.b = B;
+            closest(&R,&G,&B, &bladR, &bladG, &bladB);
+           // bladR = R - kolor.r;
+            //bladG = G - kolor.g;
+            //bladB = B - kolor.b;
             
-            setPixel(x + szerokosc / 2, y, kolor.r, kolor.g, kolor.b);
+            setPixel(x + szerokosc / 2, y, R, G, B);
 
             bledyR[x + przesuniecie + 1][y] += (bladR * 7.0 / 16.0);
             bledyR[x + przesuniecie - 1][y + 1] += (bladR * 3.0 / 16.0);
