@@ -17,7 +17,6 @@ SDL_Surface* screen = NULL;
 
 #define tytul "GKiM2021 - projekt"
 
-//
 
 void setPixel(int x, int y, Uint8 R, Uint8 G, Uint8 B);
 SDL_Color getPixel(int x, int y);
@@ -71,7 +70,6 @@ void wypiszPalete() {
 // wyswietl palete uzywana podczas konwersji obrazka
 void wyswieltPalete() {
     int i = 0;
-    Uint8 R{}, G{}, B{};
 
     // jesli uzyta zostala dopasowana paleta wyswietl ja
     if (dopasowana and dopasowanychKolorow > 0)
@@ -90,7 +88,7 @@ void wyswieltPalete() {
                 i++;
             for (int y = 0; y < wysokosc / 16; y++) {
 
-                setPixel(x, y + +wysokosc / 2, paleta[i].r, paleta[i].g, paleta[i].b);
+                setPixel(x, y + wysokosc / 2, paleta[i].r, paleta[i].g, paleta[i].b);
             }
         }
 
