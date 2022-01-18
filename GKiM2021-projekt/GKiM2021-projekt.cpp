@@ -54,26 +54,334 @@ void Funkcja2() {
 
     SDL_UpdateWindowSurface(window);
 }
+SDL_Color* createpalette() {
+    SDL_Color* palette = new SDL_Color[32];
+    SDL_Color color;
+    int tmp = 0;
+    for (int i = 0; i < 4; i++)
+    {
+        color.r = i * 85;
 
+        for (int j = 0; j < 4; j++)
+        {
+            color.g = j * 85;
+
+            for (int k = 0; k < 2; k++)
+            {
+                color.b = k * 255;
+                palette[tmp] = color;
+                /*cout << (int)color.r << " ";
+                cout << (int)color.g<<" ";
+                cout << (int)color.b << endl;*/
+                tmp++;
+            }
+        }
+    }
+    return palette;
+}
+SDL_Color closest(SDL_Color kolor) {
+    
+    SDL_Color* palette = createpalette();
+    
+  
+    int oldR = kolor.r, oldG = kolor.g, oldB = kolor.b;
+    int diffR = 0, diffG = 0, diffB = 0;
+    int smallestDiffR = 255, smallestDiffG = 255, smallestDiffB = 255;
+    for (int i = 0; i < 32; i++) {
+        diffR = abs(oldR - palette[i].r);
+        if (palette[i].r<=oldR) {//(diffR < smallestDiffR)
+            smallestDiffR = diffR;
+            kolor.r = palette[i].r;
+        }
+
+        diffG= abs(oldG - palette[i].g);
+        if (palette[i].g <= oldG) {//(diffG < smallestDiffG)
+            smallestDiffG = diffG;
+            kolor.g = palette[i].g;
+        }
+
+        diffB = abs(oldB - palette[i].b);
+        if (palette[i].b <= oldB) {//(diffB < smallestDiffB)
+            smallestDiffB = diffB;
+            kolor.b = palette[i].b;
+        }
+
+    }
+    
+    return kolor;
+}
 void Funkcja3() {
 
-    //...
+    SDL_Color kolor;
+    float bledyR[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
+    memset(bledyR, 0, sizeof(bledyR));
+    float bledyG[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
+    memset(bledyG, 0, sizeof(bledyG));
+    float bledyB[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
+    memset(bledyB, 0, sizeof(bledyB));
+    float bledy[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
+    memset(bledy, 0, sizeof(bledy));
+
+    int przesuniecie = 1;
+    int bladR = 0, bladG = 0, bladB = 0;
+
+    int R, G, B;
+    int i = 0;
+
+    for (int x = 0; x < szerokosc / 2; x++) {
+        for (int y = 0; y < wysokosc / 2; y++) {
+
+            kolor = getPixel(x, y);
+            R = kolor.r + bledyR[x + przesuniecie][y];
+            G = kolor.g + bledyG[x + przesuniecie][y];
+            B = kolor.b + bledyB[x + przesuniecie][y];
+            int oldR = R, oldG = G, oldB = B;
+
+            kolor=closest(kolor);
+
+            bladR = oldR - kolor.r;
+            bladG = oldG - kolor.g;
+            bladB = oldB - kolor.b;
+            
+            setPixel(x + szerokosc / 2, y, kolor.r, kolor.g, kolor.b);
+
+            bledyR[x + przesuniecie + 1][y] += (bladR * 7.0 / 16.0);
+            bledyR[x + przesuniecie - 1][y + 1] += (bladR * 3.0 / 16.0);
+            bledyR[x + przesuniecie][y + 1] += (bladR * 5.0 / 16.0);
+            bledyR[x + przesuniecie + 1][y + 1] += (bladR * 1.0 / 16.0);
+
+            bledyG[x + przesuniecie + 1][y] += (bladG * 7.0 / 16.0);
+            bledyG[x + przesuniecie - 1][y + 1] += (bladG * 3.0 / 16.0);
+            bledyG[x + przesuniecie][y + 1] += (bladG * 5.0 / 16.0);
+            bledyG[x + przesuniecie + 1][y + 1] += (bladG * 1.0 / 16.0);
+
+            bledyB[x + przesuniecie + 1][y] += (bladB * 7.0 / 16.0);
+            bledyB[x + przesuniecie - 1][y + 1] += (bladB * 3.0 / 16.0);
+            bledyB[x + przesuniecie][y + 1] += (bladB * 5.0 / 16.0);
+            bledyB[x + przesuniecie + 1][y + 1] += (bladB * 1.0 / 16.0);
+
+        }
+    }
+
+    ileKolorow = 0;
+    for (int x = szerokosc / 2; x < szerokosc; x++) {
+        for (int y = 0; y < wysokosc / 2; y++) {
+            kolor = getPixel(x, y);
+            sprawdzKolor(kolor);
+        }
+    }
+    cout << ileKolorow;
 
     SDL_UpdateWindowSurface(window);
+
+
+
+    /*
+    //R 0, 85, 171, 255
+    if (R < 85) {
+        bladR = R;
+        R = 0;
+    }
+    else if (R >= 85 && R < 171) {
+        bladR = R - 85;
+        R = 85;
+    }
+    else if (R >= 171 && R < 255) {
+        bladR = R - 171;
+        R = 171;
+    }
+    else {
+        bladR = R - 255;
+        R = 255;
+    }
+
+    //G 0, 85, 171, 255
+    if (G < 85) {
+        bladG = G;
+        G = 0;
+    }
+    else if (G >= 85 && G < 171) {
+        bladG = G - 85;
+        G = 85;
+    }
+    else if (G >= 171 && G < 255) {
+        bladG = G - 171;
+        G = 171;
+    }
+    else {
+        bladG = G - 255;
+        G = 255;
+    }
+
+    //B 0, 255
+    if (B < 128) { //128 bo 255/2
+        bladB = B;
+        B = 0;
+    }
+    else {
+        bladB = B - 255;
+        B = 255;
+    }
+    */
+
 }
 
 void Funkcja4() {
 
-    //...
+    int R, G, B;
+    SDL_Color kolor;
+    int BW;
+    //int BW;
+    for (int x = 0; x < szerokosc / 2; x++) {
+        for (int y = 0; y < wysokosc / 2; y++) {
+
+            kolor = getPixel(x, y);
+            R = kolor.r;
+            G = kolor.g;
+            B = kolor.b;
+           
+            BW = 0.299 * R + 0.587 * G + 0.114 * B;
+            setPixel(x+szerokosc/2, y + wysokosc / 2, BW, BW, BW);
+           BW=BW >> 3;
+            BW = BW << 3;
+           // BW = round((BW * 32) / 255);
+            setPixel(x + szerokosc / 2, y, BW, BW, BW);
+  
+        }
+    }
 
     SDL_UpdateWindowSurface(window);
+
 }
 
+SDL_Color* createBWpalette() {
+    SDL_Color* bwPalette = new SDL_Color[32];
+    SDL_Color color;
+    for (int i = 0; i < 32; i++) {
+        color.r = i * 8;
+        color.g = i * 8;
+        color.b = i * 8;
+        bwPalette[i] = color;
+    }
+    return bwPalette;
+}
+
+int closestBW(int BW) {
+    SDL_Color* palette=createBWpalette();
+    int diff = 0;
+    int smallestDiff = 255;
+    int oldBW = BW;
+    for (int i = 0; i < 32; i++) {
+        diff = abs(oldBW - palette[i].r);
+        if (diff < smallestDiff) {
+            smallestDiff = diff;
+            BW = palette[i].r;
+        }
+
+    }
+    oldBW = BW;
+    return oldBW;
+}
 void Funkcja5() {
 
-    //...
+    float bledy[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
+    memset(bledy, 0, sizeof(bledy));
+
+    int przesuniecie = 1;
+    int blad = 0;
+    int BW = 0; 
+    int oldBW = 0;
+    SDL_Color kolor;
+    for (int x = 0; x < szerokosc / 2; x++) {
+        for (int y = 0; y < wysokosc / 2; y++) {
+            kolor = getPixel(x, y);
+        
+
+            BW = 0.299 * kolor.r + 0.587 * kolor.g + 0.114 * kolor.b;
+            BW += bledy[x + przesuniecie][y];
+            oldBW = BW;
+            BW= closestBW(BW);
+           
+            blad = oldBW - BW;//r,g,b sa takie same
+            setPixel(x+szerokosc/2, y, BW, BW, BW);
+            kolor.r = BW;
+            kolor.g = BW;
+            kolor.b = BW;
+            sprawdzKolor(kolor);
+            bledy[x + przesuniecie + 1][y] += (blad * 7.0 / 16.0);
+            bledy[x + przesuniecie + 1][y + 1] += (blad * 1.0 / 16.0);
+            bledy[x + przesuniecie][y + 1] += (blad * 5.0 / 16.0);
+            bledy[x + przesuniecie - 1][y + 1] += (blad * 3.0 / 16.0);
+
+        }
+    }
+
+    /*
+    int R, G, B, BW;
+    Uint8 BW_save = 0;
+    int iterator = 0;;
+
+    float bledy[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
+    memset(bledy, 0, sizeof(bledy));
+
+    int przesuniecie = 1; //aby nie wyjść poza -1 w tablicy
+    int blad = 0;
+
+    Uint16 szerokoscObrazka = szerokosc / 2;
+    Uint16 wysokoscObrazka = wysokosc / 2;
+    int typ = 1;
+    char identyfikator[] = " ";
+
+   // cout << "Zapisujemy plik 'obraz2.bin' uzywajac metody write()" << endl;
+    //ofstream wyjscie("obraz2.bin", ios::binary);
+
+   // wyjscie.write((char*)&identyfikator, sizeof(char) * 2);
+    //wyjscie.write((char*)&typ, sizeof(int));
+    //wyjscie.write((char*)&szerokoscObrazka, sizeof(Uint16));
+    //wyjscie.write((char*)&wysokoscObrazka, sizeof(Uint16));
+
+    //0 - czarny
+    //1 - biały
+    for (int x = 0; x < szerokosc / 2; x++) {
+        for (int y = 0; y < wysokosc / 2; y++) {
+
+            if (iterator == 8) {
+              //  wyjscie.write((char*)&BW_save, sizeof(Uint8));
+                BW_save = 0;
+                iterator = 0;
+            }
+
+            BW_save = (BW_save << 1);
+            R = getPixel(x, y).r;
+            G = getPixel(x, y).g;
+            B = getPixel(x, y).b;
+
+            //BW = 0.299 * R + 0.587 * G + 0.114 * B;
+            BW = R / 3 + G / 3 + B / 3;
+            BW += bledy[x + przesuniecie][y];
+
+            if (BW > 127) {
+                setPixel(x + szerokosc / 2, y, 255, 255, 255);
+                BW_save += 1;
+                blad = BW - 255;
+            }
+            else {
+                setPixel(x + szerokosc / 2, y, 0, 0, 0);
+                blad = BW;
+            }
+
+            iterator++;
+
+            bledy[x + przesuniecie + 1][y] += (blad * 7.0 / 16.0);
+            bledy[x + przesuniecie + 1][y + 1] += (blad * 1.0 / 16.0);
+            bledy[x + przesuniecie][y + 1] += (blad * 5.0 / 16.0);
+            bledy[x + przesuniecie - 1][y + 1] += (blad * 3.0 / 16.0);
+
+        }
+    }*/
 
     SDL_UpdateWindowSurface(window);
+
 }
 
 void Funkcja6() {
