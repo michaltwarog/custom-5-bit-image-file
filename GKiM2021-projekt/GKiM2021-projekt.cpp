@@ -91,6 +91,7 @@ void wyswieltPalete() {
                 setPixel(x, y + wysokosc / 2, paleta[i].r, paleta[i].g, paleta[i].b);
             }
         }
+    SDL_UpdateWindowSurface(window);
 
 }
 
@@ -603,47 +604,78 @@ void najblizszaDopasowana(int* R, int* G, int* B, int* bladR, int* bladG, int* b
     int diffR = 0, diffG = 0, diffB = 0;
     int smallestDiffR = 255, smallestDiffG = 255, smallestDiffB = 255;
 
-    for (int i = 0; i < 32; i++) {
-        diffR = abs(oldR - dopasowanaPaleta[i].r);
-        if (diffR < smallestDiffR) {
-            smallestDiffR = diffR;
+    //for (int i = 0; i < 32; i++) {
+    //    diffR = abs(oldR - dopasowanaPaleta[i].r);
+    //    if (diffR < smallestDiffR) {
+    //        smallestDiffR = diffR;
+    //        *R = dopasowanaPaleta[i].r;
+    //        *bladR = oldR - *R;
+    //    }
+
+    //    diffG = abs(oldG - dopasowanaPaleta[i].g);
+    //    if (diffG < smallestDiffG) {
+    //        smallestDiffG = diffG;
+    //        *G = dopasowanaPaleta[i].g;
+    //        *bladG = oldG - *G;
+    //    }
+
+    //    diffB = abs(oldB - dopasowanaPaleta[i].b);
+    //    if (diffB < smallestDiffB) {
+    //        smallestDiffB = diffB;
+    //        *B = dopasowanaPaleta[i].b;
+    //        *bladB = oldB - *B;
+    //    }
+    //}
+
+    int minRoznica = 1500;   // minimalna roznica znaleziona w 
+    int roznica = 0;              // roznica liczona w kazdej iteracji
+
+    // przeszukaj cala palete dopasowanych barw 
+    for (int i = 0; i < dopasowanychKolorow; i++) {
+
+        // sumuj roznice dla poszczegolnych skladowych koloru
+        roznica = 0;
+        roznica += abs((int)oldR - (int)dopasowanaPaleta[i].r);
+        roznica += abs((int)oldG - (int)dopasowanaPaleta[i].g);
+        roznica += abs((int)oldB - (int)dopasowanaPaleta[i].b);
+
+        // sprawdz czy aktualna roznica jest minimalna
+        if (roznica < minRoznica) {
+            minRoznica = roznica;
+
             *R = dopasowanaPaleta[i].r;
-            *bladR = oldR - *R;
-        }
-
-        diffG = abs(oldG - dopasowanaPaleta[i].g);
-        if (diffG < smallestDiffG) {
-            smallestDiffG = diffG;
             *G = dopasowanaPaleta[i].g;
-            *bladG = oldG - *G;
-        }
-
-        diffB = abs(oldB - dopasowanaPaleta[i].b);
-        if (diffB < smallestDiffB) {
-            smallestDiffB = diffB;
             *B = dopasowanaPaleta[i].b;
+
+            *bladR = oldR - *R;
+            *bladG = oldG - *G;
             *bladB = oldB - *B;
         }
+
     }
+    return;
 }
 
 void Funkcja7() {
 
     SDL_Color kolor;
     float bledyR[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
-    memset(bledyR, 0, sizeof(bledyR));
     float bledyG[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
-    memset(bledyG, 0, sizeof(bledyG));
     float bledyB[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
-    memset(bledyB, 0, sizeof(bledyB));
     float bledy[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
-    memset(bledy, 0, sizeof(bledy));
-    medianCut();
+
     int przesuniecie = 1;
     int bladR = 0, bladG = 0, bladB = 0;
-
     int R, G, B;
     int i = 0;
+
+    memset(bledyR, 0, sizeof(bledyR));
+    memset(bledyG, 0, sizeof(bledyG));
+    memset(bledyB, 0, sizeof(bledyB));
+    memset(bledy, 0, sizeof(bledy));
+
+    medianCut();
+    dopasowana = true;
 
     for (int x = 0; x < szerokosc / 2; x++) {
         for (int y = 0; y < wysokosc / 2; y++) {
