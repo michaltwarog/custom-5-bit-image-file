@@ -601,32 +601,6 @@ void Funkcja6() {
 void najblizszaDopasowana(int* R, int* G, int* B, int* bladR, int* bladG, int* bladB) {
     
     int oldR = *R, oldG = *G, oldB = *B;
-    int diffR = 0, diffG = 0, diffB = 0;
-    int smallestDiffR = 255, smallestDiffG = 255, smallestDiffB = 255;
-
-    //for (int i = 0; i < 32; i++) {
-    //    diffR = abs(oldR - dopasowanaPaleta[i].r);
-    //    if (diffR < smallestDiffR) {
-    //        smallestDiffR = diffR;
-    //        *R = dopasowanaPaleta[i].r;
-    //        *bladR = oldR - *R;
-    //    }
-
-    //    diffG = abs(oldG - dopasowanaPaleta[i].g);
-    //    if (diffG < smallestDiffG) {
-    //        smallestDiffG = diffG;
-    //        *G = dopasowanaPaleta[i].g;
-    //        *bladG = oldG - *G;
-    //    }
-
-    //    diffB = abs(oldB - dopasowanaPaleta[i].b);
-    //    if (diffB < smallestDiffB) {
-    //        smallestDiffB = diffB;
-    //        *B = dopasowanaPaleta[i].b;
-    //        *bladB = oldB - *B;
-    //    }
-    //}
-
     int minRoznica = 1500;   // minimalna roznica znaleziona w 
     int roznica = 0;              // roznica liczona w kazdej iteracji
 
