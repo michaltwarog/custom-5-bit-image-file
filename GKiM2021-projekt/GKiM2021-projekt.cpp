@@ -601,7 +601,7 @@ void Funkcja6() {
 void najblizszaDopasowana(int* R, int* G, int* B, int* bladR, int* bladG, int* bladB) {
     
     int oldR = *R, oldG = *G, oldB = *B;
-    int minRoznica = 1500;   // minimalna roznica znaleziona w 
+    int minRoznica = INT_MAX;   // minimalna roznica znaleziona w 
     int roznica = 0;              // roznica liczona w kazdej iteracji
 
     // przeszukaj cala palete dopasowanych barw 
@@ -627,7 +627,6 @@ void najblizszaDopasowana(int* R, int* G, int* B, int* bladR, int* bladG, int* b
         }
 
     }
-    return;
 }
 
 void Funkcja7() {
