@@ -611,31 +611,31 @@ void Funkcja6() {
 
 void najblizszaDopasowana(int* R, int* G, int* B, int* bladR, int* bladG, int* bladB) {
 
-    SDL_Color* palette = createpalette();
+     medianCut();
 
     int oldR = *R, oldG = *G, oldB = *B;
     int diffR = 0, diffG = 0, diffB = 0;
     int smallestDiffR = 255, smallestDiffG = 255, smallestDiffB = 255;
 
     for (int i = 0; i < 32; i++) {
-        diffR = abs(oldR - palette[i].r);
+        diffR = abs(oldR - dopasowanaPaleta[i].r);
         if (diffR < smallestDiffR) {
             smallestDiffR = diffR;
-            *R = palette[i].r;
+            *R = dopasowanaPaleta[i].r;
             *bladR = oldR - *R;
         }
 
-        diffG = abs(oldG - palette[i].g);
+        diffG = abs(oldG - dopasowanaPaleta[i].g);
         if (diffG < smallestDiffG) {
             smallestDiffG = diffG;
-            *G = palette[i].g;
+            *G = dopasowanaPaleta[i].g;
             *bladG = oldG - *G;
         }
 
-        diffB = abs(oldB - palette[i].b);
+        diffB = abs(oldB - dopasowanaPaleta[i].b);
         if (diffB < smallestDiffB) {
             smallestDiffB = diffB;
-            *B = palette[i].b;
+            *B = dopasowanaPaleta[i].b;
             *bladB = oldB - *B;
         }
     }
@@ -671,9 +671,9 @@ void Funkcja7() {
             kolor.g = G;
             kolor.b = B;
 
-            closest(&R, &G, &B, &bladR, &bladG, &bladB);
-
-            setPixel(x + szerokosc / 2, y, R, G, B);
+           
+            najblizszaDopasowana(&R, &G, &B, &bladR, &bladG, &bladB);
+            setPixel(x + szerokosc / 2, y+wysokosc/2, R, G, B);
 
             bledyR[x + przesuniecie + 1][y] += (bladR * 7.0 / 16.0);
             bledyR[x + przesuniecie - 1][y + 1] += (bladR * 3.0 / 16.0);
