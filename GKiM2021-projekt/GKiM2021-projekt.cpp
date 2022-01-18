@@ -478,17 +478,7 @@ void Funkcja3() {
         }
     }
 
-    ileKolorow = 0;
-    for (int x = szerokosc / 2; x < szerokosc; x++) {
-        for (int y = 0; y < wysokosc / 2; y++) {
-            kolor = getPixel(x, y);
-            sprawdzKolor(kolor);
-        }
-    }
-    cout << ileKolorow;
-
     SDL_UpdateWindowSurface(window);
-
 
 }
 
@@ -610,9 +600,7 @@ void Funkcja6() {
 }
 
 void najblizszaDopasowana(int* R, int* G, int* B, int* bladR, int* bladG, int* bladB) {
-
-     medianCut();
-
+    
     int oldR = *R, oldG = *G, oldB = *B;
     int diffR = 0, diffG = 0, diffB = 0;
     int smallestDiffR = 255, smallestDiffG = 255, smallestDiffB = 255;
@@ -652,7 +640,7 @@ void Funkcja7() {
     memset(bledyB, 0, sizeof(bledyB));
     float bledy[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
     memset(bledy, 0, sizeof(bledy));
-
+    medianCut();
     int przesuniecie = 1;
     int bladR = 0, bladG = 0, bladB = 0;
 
@@ -674,7 +662,7 @@ void Funkcja7() {
            
             najblizszaDopasowana(&R, &G, &B, &bladR, &bladG, &bladB);
             setPixel(x + szerokosc / 2, y+wysokosc/2, R, G, B);
-
+          
             bledyR[x + przesuniecie + 1][y] += (bladR * 7.0 / 16.0);
             bledyR[x + przesuniecie - 1][y + 1] += (bladR * 3.0 / 16.0);
             bledyR[x + przesuniecie][y + 1] += (bladR * 5.0 / 16.0);
@@ -693,15 +681,7 @@ void Funkcja7() {
         }
     }
 
-    ileKolorow = 0;
-    for (int x = szerokosc / 2; x < szerokosc; x++) {
-        for (int y = 0; y < wysokosc / 2; y++) {
-            kolor = getPixel(x, y);
-            sprawdzKolor(kolor);
-        }
-    }
-    cout << ileKolorow;
-
+    
     SDL_UpdateWindowSurface(window);
 
 }
