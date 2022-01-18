@@ -70,9 +70,7 @@ SDL_Color* createpalette() {
             {
                 color.b = k * 255;
                 palette[tmp] = color;
-                /*cout << (int)color.r << " ";
-                cout << (int)color.g<<" ";
-                cout << (int)color.b << endl;*/
+
                 tmp++;
             }
         }
@@ -83,84 +81,32 @@ void closest(int*R,int*G,int*B, int *bladR, int*bladG,int*bladB) {
     
     SDL_Color* palette = createpalette();
     
-  
-   // int oldR = kolor.r, oldG = kolor.g, oldB = kolor.b;
+    int oldR = *R, oldG = *G, oldB = *B;
     int diffR = 0, diffG = 0, diffB = 0;
     int smallestDiffR = 255, smallestDiffG = 255, smallestDiffB = 255;
-    //int R = kolor.r, B = kolor.b, G = kolor.g;
-    //R 0, 85, 171, 255
-   
-    if (*R < 43) {
-        *bladR = *R;
-        *R = 0;
-    }
-    else if (*R >= 43 && *R < 128) {
-        *bladR = *R - 85;
-        *R = 85;
-    }
-    else if (*R >= 128 && *R < 214) {
-        *bladR = *R - 171;
-        *R = 171;
-    }
-    else {
-        *bladR = *R - 255;
-        *R = 255;
-    }
-
-    //G 0, 85, 171, 255
-    if (*G < 43) {
-        *bladG = *G;
-        *G = 0;
-    }
-    else if (*G >= 43 && *G < 128) {
-        *bladG = *G - 85;
-        *G = 85;
-    }
-    else if (*G >= 128 && *G < 214) {
-        *bladG = *G - 171;
-        *G = 171;
-    }
-    else {
-        *bladG = *G - 255;
-        *G = 255;
-    }
-
-    //B 0, 255
-    if (*B < 128) { //128 bo 255/2
-        *bladB = *B;
-        *B = 0;
-    }
-    else {
-        *bladB = *B - 255;
-        *B = 255;
-    }
-    /*
+    
     for (int i = 0; i < 32; i++) {
         diffR = abs(oldR - palette[i].r);
         if (diffR < smallestDiffR) {
             smallestDiffR = diffR;
-            kolor.r = palette[i].r;
+            *R = palette[i].r;
+            *bladR = oldR - *R;
         }
 
         diffG= abs(oldG - palette[i].g);
         if (diffG < smallestDiffG) {
             smallestDiffG = diffG;
-            kolor.g = palette[i].g;
+            *G = palette[i].g;
+            *bladG = oldG - *G;
         }
 
         diffB = abs(oldB - palette[i].b);
         if (diffB < smallestDiffB) {
             smallestDiffB = diffB;
-            kolor.b = palette[i].b;
+            *B = palette[i].b;
+            *bladB = oldB - *B;
         }
-
-
     }
-    */
-   // kolor.r = R;
-    //kolor.g = G;
-   // kolor.b = B;
-    //return kolor;
 }
 void Funkcja3() {
 
@@ -191,11 +137,9 @@ void Funkcja3() {
             kolor.r = R;
             kolor.g = G;
             kolor.b = B;
+
             closest(&R,&G,&B, &bladR, &bladG, &bladB);
-           // bladR = R - kolor.r;
-            //bladG = G - kolor.g;
-            //bladB = B - kolor.b;
-            
+           
             setPixel(x + szerokosc / 2, y, R, G, B);
 
             bledyR[x + przesuniecie + 1][y] += (bladR * 7.0 / 16.0);
@@ -227,55 +171,6 @@ void Funkcja3() {
 
     SDL_UpdateWindowSurface(window);
 
-
-
-    /*
-    //R 0, 85, 171, 255
-    if (R < 85) {
-        bladR = R;
-        R = 0;
-    }
-    else if (R >= 85 && R < 171) {
-        bladR = R - 85;
-        R = 85;
-    }
-    else if (R >= 171 && R < 255) {
-        bladR = R - 171;
-        R = 171;
-    }
-    else {
-        bladR = R - 255;
-        R = 255;
-    }
-
-    //G 0, 85, 171, 255
-    if (G < 85) {
-        bladG = G;
-        G = 0;
-    }
-    else if (G >= 85 && G < 171) {
-        bladG = G - 85;
-        G = 85;
-    }
-    else if (G >= 171 && G < 255) {
-        bladG = G - 171;
-        G = 171;
-    }
-    else {
-        bladG = G - 255;
-        G = 255;
-    }
-
-    //B 0, 255
-    if (B < 128) { //128 bo 255/2
-        bladB = B;
-        B = 0;
-    }
-    else {
-        bladB = B - 255;
-        B = 255;
-    }
-    */
 
 }
 
@@ -369,70 +264,6 @@ void Funkcja5() {
         }
     }
 
-    /*
-    int R, G, B, BW;
-    Uint8 BW_save = 0;
-    int iterator = 0;;
-
-    float bledy[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
-    memset(bledy, 0, sizeof(bledy));
-
-    int przesuniecie = 1; //aby nie wyjść poza -1 w tablicy
-    int blad = 0;
-
-    Uint16 szerokoscObrazka = szerokosc / 2;
-    Uint16 wysokoscObrazka = wysokosc / 2;
-    int typ = 1;
-    char identyfikator[] = " ";
-
-   // cout << "Zapisujemy plik 'obraz2.bin' uzywajac metody write()" << endl;
-    //ofstream wyjscie("obraz2.bin", ios::binary);
-
-   // wyjscie.write((char*)&identyfikator, sizeof(char) * 2);
-    //wyjscie.write((char*)&typ, sizeof(int));
-    //wyjscie.write((char*)&szerokoscObrazka, sizeof(Uint16));
-    //wyjscie.write((char*)&wysokoscObrazka, sizeof(Uint16));
-
-    //0 - czarny
-    //1 - biały
-    for (int x = 0; x < szerokosc / 2; x++) {
-        for (int y = 0; y < wysokosc / 2; y++) {
-
-            if (iterator == 8) {
-              //  wyjscie.write((char*)&BW_save, sizeof(Uint8));
-                BW_save = 0;
-                iterator = 0;
-            }
-
-            BW_save = (BW_save << 1);
-            R = getPixel(x, y).r;
-            G = getPixel(x, y).g;
-            B = getPixel(x, y).b;
-
-            //BW = 0.299 * R + 0.587 * G + 0.114 * B;
-            BW = R / 3 + G / 3 + B / 3;
-            BW += bledy[x + przesuniecie][y];
-
-            if (BW > 127) {
-                setPixel(x + szerokosc / 2, y, 255, 255, 255);
-                BW_save += 1;
-                blad = BW - 255;
-            }
-            else {
-                setPixel(x + szerokosc / 2, y, 0, 0, 0);
-                blad = BW;
-            }
-
-            iterator++;
-
-            bledy[x + przesuniecie + 1][y] += (blad * 7.0 / 16.0);
-            bledy[x + przesuniecie + 1][y + 1] += (blad * 1.0 / 16.0);
-            bledy[x + przesuniecie][y + 1] += (blad * 5.0 / 16.0);
-            bledy[x + przesuniecie - 1][y + 1] += (blad * 3.0 / 16.0);
-
-        }
-    }*/
-
     SDL_UpdateWindowSurface(window);
 
 }
@@ -444,11 +275,101 @@ void Funkcja6() {
     SDL_UpdateWindowSurface(window);
 }
 
+void najblizszaDopasowana(int* R, int* G, int* B, int* bladR, int* bladG, int* bladB) {
+
+    SDL_Color* palette = createpalette();
+
+    int oldR = *R, oldG = *G, oldB = *B;
+    int diffR = 0, diffG = 0, diffB = 0;
+    int smallestDiffR = 255, smallestDiffG = 255, smallestDiffB = 255;
+
+    for (int i = 0; i < 32; i++) {
+        diffR = abs(oldR - palette[i].r);
+        if (diffR < smallestDiffR) {
+            smallestDiffR = diffR;
+            *R = palette[i].r;
+            *bladR = oldR - *R;
+        }
+
+        diffG = abs(oldG - palette[i].g);
+        if (diffG < smallestDiffG) {
+            smallestDiffG = diffG;
+            *G = palette[i].g;
+            *bladG = oldG - *G;
+        }
+
+        diffB = abs(oldB - palette[i].b);
+        if (diffB < smallestDiffB) {
+            smallestDiffB = diffB;
+            *B = palette[i].b;
+            *bladB = oldB - *B;
+        }
+    }
+}
+
 void Funkcja7() {
 
-    //...
+    SDL_Color kolor;
+    float bledyR[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
+    memset(bledyR, 0, sizeof(bledyR));
+    float bledyG[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
+    memset(bledyG, 0, sizeof(bledyG));
+    float bledyB[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
+    memset(bledyB, 0, sizeof(bledyB));
+    float bledy[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
+    memset(bledy, 0, sizeof(bledy));
+
+    int przesuniecie = 1;
+    int bladR = 0, bladG = 0, bladB = 0;
+
+    int R, G, B;
+    int i = 0;
+
+    for (int x = 0; x < szerokosc / 2; x++) {
+        for (int y = 0; y < wysokosc / 2; y++) {
+
+            kolor = getPixel(x, y);
+            R = kolor.r + bledyR[x + przesuniecie][y];
+            G = kolor.g + bledyG[x + przesuniecie][y];
+            B = kolor.b + bledyB[x + przesuniecie][y];
+            int oldR = kolor.r, oldG = kolor.g, oldB = kolor.b;
+            kolor.r = R;
+            kolor.g = G;
+            kolor.b = B;
+
+            closest(&R, &G, &B, &bladR, &bladG, &bladB);
+
+            setPixel(x + szerokosc / 2, y, R, G, B);
+
+            bledyR[x + przesuniecie + 1][y] += (bladR * 7.0 / 16.0);
+            bledyR[x + przesuniecie - 1][y + 1] += (bladR * 3.0 / 16.0);
+            bledyR[x + przesuniecie][y + 1] += (bladR * 5.0 / 16.0);
+            bledyR[x + przesuniecie + 1][y + 1] += (bladR * 1.0 / 16.0);
+
+            bledyG[x + przesuniecie + 1][y] += (bladG * 7.0 / 16.0);
+            bledyG[x + przesuniecie - 1][y + 1] += (bladG * 3.0 / 16.0);
+            bledyG[x + przesuniecie][y + 1] += (bladG * 5.0 / 16.0);
+            bledyG[x + przesuniecie + 1][y + 1] += (bladG * 1.0 / 16.0);
+
+            bledyB[x + przesuniecie + 1][y] += (bladB * 7.0 / 16.0);
+            bledyB[x + przesuniecie - 1][y + 1] += (bladB * 3.0 / 16.0);
+            bledyB[x + przesuniecie][y + 1] += (bladB * 5.0 / 16.0);
+            bledyB[x + przesuniecie + 1][y + 1] += (bladB * 1.0 / 16.0);
+
+        }
+    }
+
+    ileKolorow = 0;
+    for (int x = szerokosc / 2; x < szerokosc; x++) {
+        for (int y = 0; y < wysokosc / 2; y++) {
+            kolor = getPixel(x, y);
+            sprawdzKolor(kolor);
+        }
+    }
+    cout << ileKolorow;
 
     SDL_UpdateWindowSurface(window);
+
 }
 
 void Funkcja8() {
