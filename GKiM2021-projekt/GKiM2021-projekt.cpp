@@ -17,6 +17,7 @@ SDL_Surface* screen = NULL;
 
 #define tytul "GKiM2021 - projekt"
 
+//
 
 void setPixel(int x, int y, Uint8 R, Uint8 G, Uint8 B);
 SDL_Color getPixel(int x, int y);
@@ -91,7 +92,6 @@ void wyswieltPalete() {
                 setPixel(x, y + wysokosc / 2, paleta[i].r, paleta[i].g, paleta[i].b);
             }
         }
-    SDL_UpdateWindowSurface(window);
 
 }
 
@@ -322,10 +322,111 @@ int znajdzNajlbizszegoSasiada(SDL_Color kolor) {
     return minIndeks;
 }
 
+
+
+
+void zapisz5bitDoPliku(ofstream& wyjscie, bool* tablica40bitow, int& ileZapisanych) {
+
+    wyjscie.write((char*)&tablica40bitow, sizeof(bool) * ileZapisanych);
+}
+
+void zerujTabliceBitow(bool* tablica40bitow, int& ileZapisanych) {
+
+    for (int i = 0; i <= 39; i++) {
+        tablica40bitow[i] = 0;
+    }
+}
+
+void konwersja10na2(ofstream& wyjscie, int liczba, bool* tablica40bitow, int& ileZapisanych) {
+
+    int i = 0, tab[5]{};
+    while (i < 5) //dopóki liczba będzie różna od zera
+    {
+        tab[i] = liczba % 2;
+        liczba /= 2;
+        i++;
+    }
+
+    for (int j = i - 1; j >= 0; j--) {
+        tablica40bitow[ileZapisanych] = tab[j];
+        ileZapisanych++;
+    }
+
+
+    if (ileZapisanych == 40) {
+        zapisz5bitDoPliku(wyjscie, tablica40bitow, ileZapisanych);
+        zerujTabliceBitow(tablica40bitow, ileZapisanych);
+        ileZapisanych = 0;
+    }
+
+}
+
+void konwersja10na2(ofstream& wyjscie, SDL_Color kolor, bool* tablica40bitow, int& ileZapisanych) {
+
+    int wartosc = (kolor.r << 3) + (kolor.g << 1) + kolor.b;
+    konwersja10na2(wyjscie, wartosc, tablica40bitow, ileZapisanych);
+
+}
+
+
+void odczytaj5bitZPliku(ifstream& wejscie, bool* tablica40bitow, int& ileZapisanych) {
+
+    wejscie.read((char*)&tablica40bitow, sizeof(bool) * ileZapisanych);
+}
+
 void Funkcja1() {
 
-    //...
+    ofstream wyjscie("obrazProjekt.bin", ios::binary);
 
+    ileKolorow = 0;
+    dopasowana = false;
+
+    int ileZapisanych = 0;
+    bool tablica40bitow[40]{};
+
+    SDL_Color kolor;
+    Uint16 szerokoscObrazka = szerokosc / 2;
+    Uint16 wysokoscObrazka = wysokosc / 2;
+    Uint8 wartosc = 0;
+    int R, G, B;
+
+
+    for (int y = 0; y < wysokosc / 2; y++) {
+        for (int x = 0; x < szerokosc / 2; x++) {
+            kolor = getPixel(x, y);
+            R = kolor.r;
+            G = kolor.g;
+            B = kolor.b;
+
+            //przesunięcie bitowe każdej z poszczególnych składowych
+            R = R >> 6;
+            G = G >> 6;
+            B = B >> 7;
+
+            konwersja10na2(wyjscie, kolor, tablica40bitow, ileZapisanych);
+
+            //powrót do wartości składowych RGB w pełnym zakresie
+            R = R << 6;
+            G = G << 6;
+            B = B << 7;
+
+            kolor.r = R;
+            kolor.g = G;
+            kolor.b = B;
+
+
+            // dodaj kolor do palety
+            sprawdzKolor(kolor);
+            setPixel(x + szerokoscObrazka, y, R, G, B);
+        }
+    }
+
+    if (ileZapisanych != 0) {
+        zapisz5bitDoPliku(wyjscie, tablica40bitow, ileZapisanych);
+    }
+
+    wyswieltPalete();
+    wyjscie.close();
     SDL_UpdateWindowSurface(window);
 }
 
@@ -371,6 +472,7 @@ void Funkcja2() {
 
     SDL_UpdateWindowSurface(window);
 }
+
 SDL_Color* createpalette() {
     SDL_Color* palette = new SDL_Color[32];
     SDL_Color color;
@@ -394,14 +496,15 @@ SDL_Color* createpalette() {
     }
     return palette;
 }
-void closest(int*R,int*G,int*B, int *bladR, int*bladG,int*bladB) {
-    
+
+void closest(int* R, int* G, int* B, int* bladR, int* bladG, int* bladB) {
+
     SDL_Color* palette = createpalette();
-    
+
     int oldR = *R, oldG = *G, oldB = *B;
     int diffR = 0, diffG = 0, diffB = 0;
     int smallestDiffR = 255, smallestDiffG = 255, smallestDiffB = 255;
-    
+
     for (int i = 0; i < 32; i++) {
         diffR = abs(oldR - palette[i].r);
         if (diffR < smallestDiffR) {
@@ -410,7 +513,7 @@ void closest(int*R,int*G,int*B, int *bladR, int*bladG,int*bladB) {
             *bladR = oldR - *R;
         }
 
-        diffG= abs(oldG - palette[i].g);
+        diffG = abs(oldG - palette[i].g);
         if (diffG < smallestDiffG) {
             smallestDiffG = diffG;
             *G = palette[i].g;
@@ -425,6 +528,7 @@ void closest(int*R,int*G,int*B, int *bladR, int*bladG,int*bladB) {
         }
     }
 }
+
 void Funkcja3() {
 
     SDL_Color kolor;
@@ -455,8 +559,8 @@ void Funkcja3() {
             kolor.g = G;
             kolor.b = B;
 
-            closest(&R,&G,&B, &bladR, &bladG, &bladB);
-           
+            closest(&R, &G, &B, &bladR, &bladG, &bladB);
+
             setPixel(x + szerokosc / 2, y, R, G, B);
 
             bledyR[x + przesuniecie + 1][y] += (bladR * 7.0 / 16.0);
@@ -478,7 +582,6 @@ void Funkcja3() {
     }
 
     SDL_UpdateWindowSurface(window);
-
 }
 
 void Funkcja4() {
@@ -494,19 +597,18 @@ void Funkcja4() {
             R = kolor.r;
             G = kolor.g;
             B = kolor.b;
-           
+
             BW = 0.299 * R + 0.587 * G + 0.114 * B;
-            setPixel(x+szerokosc/2, y + wysokosc / 2, BW, BW, BW);
-           BW=BW >> 3;
+            setPixel(x + szerokosc / 2, y + wysokosc / 2, BW, BW, BW);
+            BW = BW >> 3;
             BW = BW << 3;
-           // BW = round((BW * 32) / 255);
+            // BW = round((BW * 32) / 255);
             setPixel(x + szerokosc / 2, y, BW, BW, BW);
-  
+
         }
     }
 
     SDL_UpdateWindowSurface(window);
-
 }
 
 SDL_Color* createBWpalette() {
@@ -522,7 +624,7 @@ SDL_Color* createBWpalette() {
 }
 
 int closestBW(int BW) {
-    SDL_Color* palette=createBWpalette();
+    SDL_Color* palette = createBWpalette();
     int diff = 0;
     int smallestDiff = 255;
     int oldBW = BW;
@@ -537,6 +639,7 @@ int closestBW(int BW) {
     oldBW = BW;
     return oldBW;
 }
+
 void Funkcja5() {
 
     float bledy[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
@@ -544,21 +647,21 @@ void Funkcja5() {
 
     int przesuniecie = 1;
     int blad = 0;
-    int BW = 0; 
+    int BW = 0;
     int oldBW = 0;
     SDL_Color kolor;
     for (int x = 0; x < szerokosc / 2; x++) {
         for (int y = 0; y < wysokosc / 2; y++) {
             kolor = getPixel(x, y);
-        
+
 
             BW = 0.299 * kolor.r + 0.587 * kolor.g + 0.114 * kolor.b;
             BW += bledy[x + przesuniecie][y];
             oldBW = BW;
-            BW= closestBW(BW);
-           
+            BW = closestBW(BW);
+
             blad = oldBW - BW;//r,g,b sa takie same
-            setPixel(x+szerokosc/2, y, BW, BW, BW);
+            setPixel(x + szerokosc / 2, y, BW, BW, BW);
             kolor.r = BW;
             kolor.g = BW;
             kolor.b = BW;
@@ -572,7 +675,6 @@ void Funkcja5() {
     }
 
     SDL_UpdateWindowSurface(window);
-
 }
 
 //https://muthu.co/reducing-the-number-of-colors-of-an-image-using-median-cut-algorithm/
@@ -599,33 +701,32 @@ void Funkcja6() {
 }
 
 void najblizszaDopasowana(int* R, int* G, int* B, int* bladR, int* bladG, int* bladB) {
-    
+
     int oldR = *R, oldG = *G, oldB = *B;
-    int minRoznica = INT_MAX;   // minimalna roznica znaleziona w 
-    int roznica = 0;              // roznica liczona w kazdej iteracji
+    int diffR = 0, diffG = 0, diffB = 0;
+    int smallestDiffR = 255, smallestDiffG = 255, smallestDiffB = 255;
 
-    // przeszukaj cala palete dopasowanych barw 
-    for (int i = 0; i < dopasowanychKolorow; i++) {
-
-        // sumuj roznice dla poszczegolnych skladowych koloru
-        roznica = 0;
-        roznica += abs((int)oldR - (int)dopasowanaPaleta[i].r);
-        roznica += abs((int)oldG - (int)dopasowanaPaleta[i].g);
-        roznica += abs((int)oldB - (int)dopasowanaPaleta[i].b);
-
-        // sprawdz czy aktualna roznica jest minimalna
-        if (roznica < minRoznica) {
-            minRoznica = roznica;
-
+    for (int i = 0; i < 32; i++) {
+        diffR = abs(oldR - dopasowanaPaleta[i].r);
+        if (diffR < smallestDiffR) {
+            smallestDiffR = diffR;
             *R = dopasowanaPaleta[i].r;
-            *G = dopasowanaPaleta[i].g;
-            *B = dopasowanaPaleta[i].b;
-
             *bladR = oldR - *R;
-            *bladG = oldG - *G;
-            *bladB = oldB - *B;
         }
 
+        diffG = abs(oldG - dopasowanaPaleta[i].g);
+        if (diffG < smallestDiffG) {
+            smallestDiffG = diffG;
+            *G = dopasowanaPaleta[i].g;
+            *bladG = oldG - *G;
+        }
+
+        diffB = abs(oldB - dopasowanaPaleta[i].b);
+        if (diffB < smallestDiffB) {
+            smallestDiffB = diffB;
+            *B = dopasowanaPaleta[i].b;
+            *bladB = oldB - *B;
+        }
     }
 }
 
@@ -633,22 +734,19 @@ void Funkcja7() {
 
     SDL_Color kolor;
     float bledyR[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
+    memset(bledyR, 0, sizeof(bledyR));
     float bledyG[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
+    memset(bledyG, 0, sizeof(bledyG));
     float bledyB[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
+    memset(bledyB, 0, sizeof(bledyB));
     float bledy[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
-
+    memset(bledy, 0, sizeof(bledy));
+    medianCut();
     int przesuniecie = 1;
     int bladR = 0, bladG = 0, bladB = 0;
+
     int R, G, B;
     int i = 0;
-
-    memset(bledyR, 0, sizeof(bledyR));
-    memset(bledyG, 0, sizeof(bledyG));
-    memset(bledyB, 0, sizeof(bledyB));
-    memset(bledy, 0, sizeof(bledy));
-
-    medianCut();
-    dopasowana = true;
 
     for (int x = 0; x < szerokosc / 2; x++) {
         for (int y = 0; y < wysokosc / 2; y++) {
@@ -662,10 +760,10 @@ void Funkcja7() {
             kolor.g = G;
             kolor.b = B;
 
-           
+
             najblizszaDopasowana(&R, &G, &B, &bladR, &bladG, &bladB);
-            setPixel(x + szerokosc / 2, y+wysokosc/2, R, G, B);
-          
+            setPixel(x + szerokosc / 2, y + wysokosc / 2, R, G, B);
+
             bledyR[x + przesuniecie + 1][y] += (bladR * 7.0 / 16.0);
             bledyR[x + przesuniecie - 1][y + 1] += (bladR * 3.0 / 16.0);
             bledyR[x + przesuniecie][y + 1] += (bladR * 5.0 / 16.0);
@@ -684,14 +782,61 @@ void Funkcja7() {
         }
     }
 
-    
-    SDL_UpdateWindowSurface(window);
 
+    SDL_UpdateWindowSurface(window);
+}
+
+int boolToInt(bool* zmienna1, int zmienna2, int dlugosc) {
+
+    int j = 0;
+
+    for (int i = dlugosc; i >= 0; i--) {
+        if (zmienna1[j] == 1) {
+            zmienna2 += (int)pow(2, dlugosc);
+        }
+        j++;
+    }
+    return zmienna2;
 }
 
 void Funkcja8() {
 
-    //...
+    Uint16 szerokoscObrazka = szerokosc / 2;
+    Uint16 wysokoscObrazka = wysokosc / 2;
+    int R = 0, G = 0, B = 0;
+    int kolejnosc = 0;
+    int dlugosc = 0;
+    bool* skladowa = new bool[2]{ 0 };
+    cout << skladowa[1];
+    ifstream wejscie("obrazProjekt.bin", ios::binary);
+
+    for (int x = 0; x < szerokoscObrazka; x++) {
+        for (int y = 0; y < wysokoscObrazka; y++) {
+
+
+            if (kolejnosc == 0) { //odczytanie wartości R
+                dlugosc = 1;
+                wejscie.read((char*)&skladowa, sizeof(bool) * 2);
+                kolejnosc++;
+                R = boolToInt(skladowa, R, dlugosc);
+            }
+            else if (kolejnosc == 1) {  //odczytanie wartości G
+                dlugosc = 1;
+                wejscie.read((char*)&skladowa, sizeof(bool) * 2);
+                kolejnosc++;
+                G = boolToInt(skladowa, G, dlugosc);
+            }
+            else if (kolejnosc == 2) { //odczytanie wartości B
+                dlugosc = 0;
+                wejscie.read((char*)&skladowa, sizeof(bool) * 1);
+                kolejnosc = 0;
+                B = boolToInt(skladowa, B, dlugosc);
+            }
+
+            setPixel(x, y + wysokoscObrazka, R, G, B);
+        }
+
+    }
 
     SDL_UpdateWindowSurface(window);
 }
