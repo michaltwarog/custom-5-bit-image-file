@@ -1,4 +1,4 @@
-﻿#include <exception>
+#include <exception>
 #include <string.h>
 #include <iostream>
 #include <fstream>
@@ -320,23 +320,40 @@ int znajdzNajlbizszegoSasiada(SDL_Color kolor) {
     }
 
     return minIndeks;
+
 }
 
 
 
-
+//Funkcja zapisuje dane do pliku zamieniając wcześniej dane z postaci binarnej na postać dziesiętną
 void zapisz5bitDoPliku(ofstream& wyjscie, bool* tablica40bitow, int& ileZapisanych) {
 
-    wyjscie.write((char*)&tablica40bitow, sizeof(bool) * ileZapisanych);
+    Uint8 zmienna = 0;
+    int iterator = 0;
+    for (int i = 0; i < ileZapisanych; i++) {
+        zmienna += tablica40bitow[i];
+        iterator++;
+        //zapisywanie kolejnych bajtów do pliku
+        if (iterator == 8) {
+            wyjscie.write((char*)&zmienna, sizeof(Uint8));
+            iterator = 0;
+            zmienna = 0;
+        }
+        zmienna <<= 1;
+
+    }
+
 }
 
+//Funkcja zeruje tablice przechowującą wcześniej zapisane bity
 void zerujTabliceBitow(bool* tablica40bitow, int& ileZapisanych) {
 
-    for (int i = 0; i <= 39; i++) {
+    for (int i = 0; i < ileZapisanych; i++) {
         tablica40bitow[i] = 0;
     }
 }
 
+//Funkcja zamienia liczby z postaci dziesiętnej na postać binarną oraz zapisuje kolejne bity do tablicy tablica40bitów
 void konwersja10na2(ofstream& wyjscie, int liczba, bool* tablica40bitow, int& ileZapisanych) {
 
     int i = 0, tab[5]{};
@@ -346,13 +363,13 @@ void konwersja10na2(ofstream& wyjscie, int liczba, bool* tablica40bitow, int& il
         liczba /= 2;
         i++;
     }
-
+    //zapisanie kolejnych bitów do tablicy 
     for (int j = i - 1; j >= 0; j--) {
         tablica40bitow[ileZapisanych] = tab[j];
         ileZapisanych++;
     }
 
-
+    //jeśli w tablicy przechowującej bity zapisana została sekwencja kolejnych 40 bitów zostaje wywołana funkcja do zapisywania danych do pliku
     if (ileZapisanych == 40) {
         zapisz5bitDoPliku(wyjscie, tablica40bitow, ileZapisanych);
         zerujTabliceBitow(tablica40bitow, ileZapisanych);
@@ -361,19 +378,14 @@ void konwersja10na2(ofstream& wyjscie, int liczba, bool* tablica40bitow, int& il
 
 }
 
+//Funkcja, która zamienia wartość spod zmiennej SDL_Color na wartość pięcio bitową  
 void konwersja10na2(ofstream& wyjscie, SDL_Color kolor, bool* tablica40bitow, int& ileZapisanych) {
-
-    int wartosc = (kolor.r << 3) + (kolor.g << 1) + kolor.b;
+    int wartosc = ((kolor.r & 192) >> 3) + ((kolor.g & 192) >> 5) + ((kolor.b & 128) >> 7);
     konwersja10na2(wyjscie, wartosc, tablica40bitow, ileZapisanych);
 
 }
 
-
-void odczytaj5bitZPliku(ifstream& wejscie, bool* tablica40bitow, int& ileZapisanych) {
-
-    wejscie.read((char*)&tablica40bitow, sizeof(bool) * ileZapisanych);
-}
-
+//Funkcja wykonująca przesunięcie bitowe
 void Funkcja1() {
 
     ofstream wyjscie("obrazProjekt.bin", ios::binary);
@@ -390,9 +402,9 @@ void Funkcja1() {
     Uint8 wartosc = 0;
     int R, G, B;
 
-
-    for (int y = 0; y < wysokosc / 2; y++) {
-        for (int x = 0; x < szerokosc / 2; x++) {
+    for (int x = 0; x < szerokosc / 2; x++) {
+        for (int y = 0; y < wysokosc / 2; y++) {
+        
             kolor = getPixel(x, y);
             R = kolor.r;
             G = kolor.g;
@@ -472,7 +484,6 @@ void Funkcja2() {
 
     SDL_UpdateWindowSurface(window);
 }
-
 SDL_Color* createpalette() {
     SDL_Color* palette = new SDL_Color[32];
     SDL_Color color;
@@ -496,7 +507,6 @@ SDL_Color* createpalette() {
     }
     return palette;
 }
-
 void closest(int* R, int* G, int* B, int* bladR, int* bladG, int* bladB) {
 
     SDL_Color* palette = createpalette();
@@ -528,7 +538,6 @@ void closest(int* R, int* G, int* B, int* bladR, int* bladG, int* bladB) {
         }
     }
 }
-
 void Funkcja3() {
 
     SDL_Color kolor;
@@ -582,6 +591,7 @@ void Funkcja3() {
     }
 
     SDL_UpdateWindowSurface(window);
+
 }
 
 void Funkcja4() {
@@ -609,6 +619,7 @@ void Funkcja4() {
     }
 
     SDL_UpdateWindowSurface(window);
+
 }
 
 SDL_Color* createBWpalette() {
@@ -639,7 +650,6 @@ int closestBW(int BW) {
     oldBW = BW;
     return oldBW;
 }
-
 void Funkcja5() {
 
     float bledy[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
@@ -675,6 +685,7 @@ void Funkcja5() {
     }
 
     SDL_UpdateWindowSurface(window);
+
 }
 
 //https://muthu.co/reducing-the-number-of-colors-of-an-image-using-median-cut-algorithm/
@@ -703,30 +714,31 @@ void Funkcja6() {
 void najblizszaDopasowana(int* R, int* G, int* B, int* bladR, int* bladG, int* bladB) {
 
     int oldR = *R, oldG = *G, oldB = *B;
-    int diffR = 0, diffG = 0, diffB = 0;
-    int smallestDiffR = 255, smallestDiffG = 255, smallestDiffB = 255;
+    int minRoznica = INT_MAX;   // minimalna roznica znaleziona w 
+    int roznica = 0;              // roznica liczona w kazdej iteracji
 
-    for (int i = 0; i < 32; i++) {
-        diffR = abs(oldR - dopasowanaPaleta[i].r);
-        if (diffR < smallestDiffR) {
-            smallestDiffR = diffR;
+    // przeszukaj cala palete dopasowanych barw 
+    for (int i = 0; i < dopasowanychKolorow; i++) {
+
+        // sumuj roznice dla poszczegolnych skladowych koloru
+        roznica = 0;
+        roznica += abs((int)oldR - (int)dopasowanaPaleta[i].r);
+        roznica += abs((int)oldG - (int)dopasowanaPaleta[i].g);
+        roznica += abs((int)oldB - (int)dopasowanaPaleta[i].b);
+
+        // sprawdz czy aktualna roznica jest minimalna
+        if (roznica < minRoznica) {
+            minRoznica = roznica;
+
             *R = dopasowanaPaleta[i].r;
-            *bladR = oldR - *R;
-        }
-
-        diffG = abs(oldG - dopasowanaPaleta[i].g);
-        if (diffG < smallestDiffG) {
-            smallestDiffG = diffG;
             *G = dopasowanaPaleta[i].g;
-            *bladG = oldG - *G;
-        }
-
-        diffB = abs(oldB - dopasowanaPaleta[i].b);
-        if (diffB < smallestDiffB) {
-            smallestDiffB = diffB;
             *B = dopasowanaPaleta[i].b;
+
+            *bladR = oldR - *R;
+            *bladG = oldG - *G;
             *bladB = oldB - *B;
         }
+
     }
 }
 
@@ -734,19 +746,22 @@ void Funkcja7() {
 
     SDL_Color kolor;
     float bledyR[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
-    memset(bledyR, 0, sizeof(bledyR));
     float bledyG[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
-    memset(bledyG, 0, sizeof(bledyG));
     float bledyB[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
-    memset(bledyB, 0, sizeof(bledyB));
     float bledy[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
-    memset(bledy, 0, sizeof(bledy));
-    medianCut();
+
     int przesuniecie = 1;
     int bladR = 0, bladG = 0, bladB = 0;
-
     int R, G, B;
     int i = 0;
+
+    memset(bledyR, 0, sizeof(bledyR));
+    memset(bledyG, 0, sizeof(bledyG));
+    memset(bledyB, 0, sizeof(bledyB));
+    memset(bledy, 0, sizeof(bledy));
+
+    medianCut();
+    dopasowana = true;
 
     for (int x = 0; x < szerokosc / 2; x++) {
         for (int y = 0; y < wysokosc / 2; y++) {
@@ -784,61 +799,77 @@ void Funkcja7() {
 
 
     SDL_UpdateWindowSurface(window);
+
 }
 
-int boolToInt(bool* zmienna1, int zmienna2, int dlugosc) {
+//Funkcja odczytuje w pętli zewnętrznej kolejne bajty w postaci zmiennej typu Uint8 natomiast w pętli wewnętrznej rozbija bajt na osiem bitów i zapisuje je pod kolejnymi indeksami w tablicy
+void konwersjaUint8naBool(ifstream& wejscie,bool* skladowa ) {
 
-    int j = 0;
-
-    for (int i = dlugosc; i >= 0; i--) {
-        if (zmienna1[j] == 1) {
-            zmienna2 += (int)pow(2, dlugosc);
+    int iterator = 0;
+    Uint8 odczytaneDane = 0;
+    for (int i = 0; i < 5; i++) {
+        wejscie.read((char*)&odczytaneDane, sizeof(Uint8));
+        for (int j = 0; j < 8; j++) {
+            if ((int)odczytaneDane >= 128) {
+                skladowa[iterator] = 1;
+            }
+            else
+                skladowa[iterator] = 0;
+            odczytaneDane <<= 1;
+            iterator++;
         }
-        j++;
     }
-    return zmienna2;
-}
 
+}
+//aktulnie funkcja odczytuje z pliku obraz zapisany za pomocą funkcji, w której wykonywane jest przesunięcie bitowe
 void Funkcja8() {
 
     Uint16 szerokoscObrazka = szerokosc / 2;
     Uint16 wysokoscObrazka = wysokosc / 2;
     int R = 0, G = 0, B = 0;
-    int kolejnosc = 0;
-    int dlugosc = 0;
-    bool* skladowa = new bool[2]{ 0 };
-    cout << skladowa[1];
+    bool skladowa[40]{ 0 };
     ifstream wejscie("obrazProjekt.bin", ios::binary);
 
-    for (int x = 0; x < szerokoscObrazka; x++) {
-        for (int y = 0; y < wysokoscObrazka; y++) {
+    konwersjaUint8naBool(wejscie,skladowa);
+    
+    int osiemBitow = 0;
+    int i = 0;
+    for (int x = 0; x < szerokosc / 2; x++) {
+        for (int y = 0; y < wysokosc / 2; y++) {
 
+            if (osiemBitow == 8) {
+                konwersjaUint8naBool(wejscie, skladowa);
+                osiemBitow = 0;
+                i = 0;
+            }
+            osiemBitow++;
 
-            if (kolejnosc == 0) { //odczytanie wartości R
-                dlugosc = 1;
-                wejscie.read((char*)&skladowa, sizeof(bool) * 2);
-                kolejnosc++;
-                R = boolToInt(skladowa, R, dlugosc);
-            }
-            else if (kolejnosc == 1) {  //odczytanie wartości G
-                dlugosc = 1;
-                wejscie.read((char*)&skladowa, sizeof(bool) * 2);
-                kolejnosc++;
-                G = boolToInt(skladowa, G, dlugosc);
-            }
-            else if (kolejnosc == 2) { //odczytanie wartości B
-                dlugosc = 0;
-                wejscie.read((char*)&skladowa, sizeof(bool) * 1);
-                kolejnosc = 0;
-                B = boolToInt(skladowa, B, dlugosc);
-            }
+            R = skladowa[i];
+            R <<= 1;
+            i++;
+            R += skladowa[i];
+            R <<= 6;
 
-            setPixel(x, y + wysokoscObrazka, R, G, B);
+            i++;
+            G = skladowa[i];
+            G <<= 1;
+            i++;
+            G += skladowa[i];
+            G <<= 6;
+
+            i++;
+            B = skladowa[i];
+            B <<= 7;
+            i++;
+
+            setPixel(x + szerokoscObrazka, y + wysokoscObrazka, R, G, B);
+
         }
 
     }
 
     SDL_UpdateWindowSurface(window);
+    wejscie.close();
 }
 
 void Funkcja9() {
