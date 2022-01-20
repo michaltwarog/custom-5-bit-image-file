@@ -325,7 +325,11 @@ int znajdzNajlbizszegoSasiada(SDL_Color kolor) {
 
 
 
+
 //Funkcja zapisuje dane do pliku zamieniając wcześniej dane z postaci binarnej na postać dziesiętną
+
+
+
 void zapisz5bitDoPliku(ofstream& wyjscie, bool* tablica40bitow, int& ileZapisanych) {
 
     Uint8 zmienna = 0;
@@ -333,7 +337,9 @@ void zapisz5bitDoPliku(ofstream& wyjscie, bool* tablica40bitow, int& ileZapisany
     for (int i = 0; i < ileZapisanych; i++) {
         zmienna += tablica40bitow[i];
         iterator++;
+
         //zapisywanie kolejnych bajtów do pliku
+
         if (iterator == 8) {
             wyjscie.write((char*)&zmienna, sizeof(Uint8));
             iterator = 0;
@@ -345,7 +351,9 @@ void zapisz5bitDoPliku(ofstream& wyjscie, bool* tablica40bitow, int& ileZapisany
 
 }
 
+
 //Funkcja zeruje tablice przechowującą wcześniej zapisane bity
+
 void zerujTabliceBitow(bool* tablica40bitow, int& ileZapisanych) {
 
     for (int i = 0; i < ileZapisanych; i++) {
@@ -353,7 +361,9 @@ void zerujTabliceBitow(bool* tablica40bitow, int& ileZapisanych) {
     }
 }
 
+
 //Funkcja zamienia liczby z postaci dziesiętnej na postać binarną oraz zapisuje kolejne bity do tablicy tablica40bitów
+
 void konwersja10na2(ofstream& wyjscie, int liczba, bool* tablica40bitow, int& ileZapisanych) {
 
     int i = 0, tab[5]{};
@@ -363,13 +373,17 @@ void konwersja10na2(ofstream& wyjscie, int liczba, bool* tablica40bitow, int& il
         liczba /= 2;
         i++;
     }
+
     //zapisanie kolejnych bitów do tablicy 
+
     for (int j = i - 1; j >= 0; j--) {
         tablica40bitow[ileZapisanych] = tab[j];
         ileZapisanych++;
     }
 
+
     //jeśli w tablicy przechowującej bity zapisana została sekwencja kolejnych 40 bitów zostaje wywołana funkcja do zapisywania danych do pliku
+
     if (ileZapisanych == 40) {
         zapisz5bitDoPliku(wyjscie, tablica40bitow, ileZapisanych);
         zerujTabliceBitow(tablica40bitow, ileZapisanych);
@@ -378,14 +392,18 @@ void konwersja10na2(ofstream& wyjscie, int liczba, bool* tablica40bitow, int& il
 
 }
 
+
 //Funkcja, która zamienia wartość spod zmiennej SDL_Color na wartość pięcio bitową  
+
 void konwersja10na2(ofstream& wyjscie, SDL_Color kolor, bool* tablica40bitow, int& ileZapisanych) {
     int wartosc = ((kolor.r & 192) >> 3) + ((kolor.g & 192) >> 5) + ((kolor.b & 128) >> 7);
     konwersja10na2(wyjscie, wartosc, tablica40bitow, ileZapisanych);
 
 }
 
+
 //Funkcja wykonująca przesunięcie bitowe
+
 void Funkcja1() {
 
     ofstream wyjscie("obrazProjekt.bin", ios::binary);
@@ -401,6 +419,7 @@ void Funkcja1() {
     Uint16 wysokoscObrazka = wysokosc / 2;
     Uint8 wartosc = 0;
     int R, G, B;
+
 
     for (int x = 0; x < szerokosc / 2; x++) {
         for (int y = 0; y < wysokosc / 2; y++) {
@@ -425,6 +444,7 @@ void Funkcja1() {
             kolor.r = R;
             kolor.g = G;
             kolor.b = B;
+
 
 
             // dodaj kolor do palety
@@ -801,6 +821,19 @@ void Funkcja7() {
     SDL_UpdateWindowSurface(window);
 
 }
+//
+int boolToInt(bool* zmienna1, int dlugosc) {
+
+    int j = 0;
+    int zmienna2{};
+    for (int i = dlugosc; i >= 0; i--) {
+        if (zmienna1[j] == 1) {
+            zmienna2 += (int)pow(2, dlugosc);
+        }
+        j++;
+    }
+    return zmienna2;
+}
 
 //Funkcja odczytuje w pętli zewnętrznej kolejne bajty w postaci zmiennej typu Uint8 natomiast w pętli wewnętrznej rozbija bajt na osiem bitów i zapisuje je pod kolejnymi indeksami w tablicy
 void konwersjaUint8naBool(ifstream& wejscie,bool* skladowa ) {
@@ -827,6 +860,7 @@ void Funkcja8() {
     Uint16 szerokoscObrazka = szerokosc / 2;
     Uint16 wysokoscObrazka = wysokosc / 2;
     int R = 0, G = 0, B = 0;
+
     bool skladowa[40]{ 0 };
     ifstream wejscie("obrazProjekt.bin", ios::binary);
 
@@ -843,6 +877,7 @@ void Funkcja8() {
                 i = 0;
             }
             osiemBitow++;
+
 
             R = skladowa[i];
             R <<= 1;
@@ -862,7 +897,9 @@ void Funkcja8() {
             B <<= 7;
             i++;
 
+
             setPixel(x + szerokoscObrazka, y + wysokoscObrazka, R, G, B);
+
 
         }
 
