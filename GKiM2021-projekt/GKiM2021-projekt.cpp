@@ -827,6 +827,25 @@ void Funkcja7() {
 
 }
 
+//Funkcja odczytuje w pętli zewnętrznej kolejne bajty w postaci zmiennej typu Uint8 natomiast w pętli wewnętrznej rozbija bajt na osiem bitów i zapisuje je pod kolejnymi indeksami w tablicy
+void konwersjaUint8naBool(ifstream& wejscie, bool* skladowa) {
+
+    int iterator = 0;
+    Uint8 odczytaneDane = 0;
+    for (int i = 0; i < 5; i++) {
+        wejscie.read((char*)&odczytaneDane, sizeof(Uint8));
+        for (int j = 0; j < 8; j++) {
+            if ((int)odczytaneDane >= 128) {
+                skladowa[iterator] = 1;
+            }
+            else
+                skladowa[iterator] = 0;
+            odczytaneDane <<= 1;
+            iterator++;
+        }
+    }
+
+}
 
 //aktulnie funkcja odczytuje z pliku obraz zapisany za pomocą funkcji, w której wykonywane jest przesunięcie bitowe
 void Funkcja8() {
