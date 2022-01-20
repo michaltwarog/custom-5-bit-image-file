@@ -17,8 +17,6 @@ SDL_Surface* screen = NULL;
 
 #define tytul "GKiM2021 - projekt"
 
-//
-
 void setPixel(int x, int y, Uint8 R, Uint8 G, Uint8 B);
 SDL_Color getPixel(int x, int y);
 
@@ -48,6 +46,7 @@ void Funkcja9();
 
 SDL_Color paleta[szerokosc / 2 * wysokosc / 2];
 SDL_Color dopasowanaPaleta[32];
+int ideksy[szerokosc / 2*wysokosc / 2];
 int ileKolorow = 0;
 int dopasowanychKolorow = 0;
 int dopasowana = false;
@@ -320,12 +319,151 @@ int znajdzNajlbizszegoSasiada(SDL_Color kolor) {
     }
 
     return minIndeks;
+
 }
+
+
+
+
+//Funkcja zapisuje dane do pliku zamieniając wcześniej dane z postaci binarnej na postać dziesiętną
+
+void zapisz5bitDoPliku(ofstream& wyjscie, bool* tablica40bitow, int& ileZapisanych) {
+
+    Uint8 zmienna = 0;
+    int iterator = 0;
+    for (int i = 0; i < ileZapisanych; i++) {
+        zmienna += tablica40bitow[i];
+        iterator++;
+
+        //zapisywanie kolejnych bajtów do pliku
+
+        if (iterator == 8) {
+            wyjscie.write((char*)&zmienna, sizeof(Uint8));
+            iterator = 0;
+            zmienna = 0;
+        }
+        zmienna <<= 1;
+
+    }
+
+}
+
+
+//Funkcja zeruje tablice przechowującą wcześniej zapisane bity
+
+void zerujTabliceBitow(bool* tablica40bitow, int& ileZapisanych) {
+
+    for (int i = 0; i < ileZapisanych; i++) {
+        tablica40bitow[i] = 0;
+    }
+}
+
+
+//Funkcja zamienia liczby z postaci dziesiętnej na postać binarną oraz zapisuje kolejne bity do tablicy tablica40bitów
+
+void konwersja10na2(ofstream& wyjscie, int liczba, bool* tablica40bitow, int& ileZapisanych) {
+
+    int i = 0, tab[5]{};
+    while (i < 5) //dopóki liczba będzie różna od zera
+    {
+        tab[i] = liczba % 2;
+        liczba /= 2;
+        i++;
+    }
+
+    //zapisanie kolejnych bitów do tablicy 
+
+    for (int j = i - 1; j >= 0; j--) {
+        tablica40bitow[ileZapisanych] = tab[j];
+        ileZapisanych++;
+    }
+
+
+    //jeśli w tablicy przechowującej bity zapisana została sekwencja kolejnych 40 bitów zostaje wywołana funkcja do zapisywania danych do pliku
+
+    if (ileZapisanych == 40) {
+        zapisz5bitDoPliku(wyjscie, tablica40bitow, ileZapisanych);
+        zerujTabliceBitow(tablica40bitow, ileZapisanych);
+        ileZapisanych = 0;
+    }
+
+}
+
+
+//Funkcja, która zamienia wartość spod zmiennej SDL_Color na wartość pięcio bitową  
+
+void konwersja10na2(ofstream& wyjscie, SDL_Color kolor, bool* tablica40bitow, int& ileZapisanych) {
+    int wartosc = ((kolor.r & 192) >> 3) + ((kolor.g & 192) >> 5) + ((kolor.b & 128) >> 7);
+    konwersja10na2(wyjscie, wartosc, tablica40bitow, ileZapisanych);
+
+}
+
+
+//Funkcja wykonująca przesunięcie bitowe
 
 void Funkcja1() {
 
-    //...
+    ofstream wyjscie("obrazProjekt.bin", ios::binary);
 
+    ileKolorow = 0;
+    dopasowana = false;
+
+    int ileZapisanych = 0;
+    bool tablica40bitow[40]{};
+
+    SDL_Color kolor;
+    Uint16 szerokoscObrazka = szerokosc / 2;
+    Uint16 wysokoscObrazka = wysokosc / 2;
+    Uint8 wartosc = 0;
+    int R, G, B;
+
+
+    for (int x = 0; x < szerokosc / 2; x++) {
+        for (int y = 0; y < wysokosc / 2; y++) {
+
+
+            kolor = getPixel(x, y);
+            R = kolor.r;
+            G = kolor.g;
+            B = kolor.b;
+
+            //przesunięcie bitowe każdej z poszczególnych składowych
+            R = R >> 6;
+            G = G >> 6;
+            B = B >> 7;
+
+
+            //if (ileZapisanych >= 34 and y == 40) {
+            //    cout << "ZAPIS x = "<< x <<" :";
+            //    for (int i = 0; i < ileZapisanych; i++) {
+            //        cout << tablica40bitow[i] << " ";
+            //    }
+            //    cout << endl;
+            //}
+            konwersja10na2(wyjscie, kolor, tablica40bitow, ileZapisanych);
+
+            //powrót do wartości składowych RGB w pełnym zakresie
+            R = R << 6;
+            G = G << 6;
+            B = B << 7;
+
+            kolor.r = R;
+            kolor.g = G;
+            kolor.b = B;
+
+
+            // dodaj kolor do palety
+            sprawdzKolor(kolor);
+            setPixel(x + szerokoscObrazka, y, R, G, B);
+        }
+    }
+
+    if (ileZapisanych != 0) {
+        zapisz5bitDoPliku(wyjscie, tablica40bitow, ileZapisanych);
+    }
+
+    wyswieltPalete();
+    wyjscie.close();
     SDL_UpdateWindowSurface(window);
 }
 
@@ -394,14 +532,14 @@ SDL_Color* createpalette() {
     }
     return palette;
 }
-void closest(int*R,int*G,int*B, int *bladR, int*bladG,int*bladB) {
-    
+void closest(int* R, int* G, int* B, int* bladR, int* bladG, int* bladB) {
+
     SDL_Color* palette = createpalette();
-    
+
     int oldR = *R, oldG = *G, oldB = *B;
     int diffR = 0, diffG = 0, diffB = 0;
     int smallestDiffR = 255, smallestDiffG = 255, smallestDiffB = 255;
-    
+
     for (int i = 0; i < 32; i++) {
         diffR = abs(oldR - palette[i].r);
         if (diffR < smallestDiffR) {
@@ -410,7 +548,7 @@ void closest(int*R,int*G,int*B, int *bladR, int*bladG,int*bladB) {
             *bladR = oldR - *R;
         }
 
-        diffG= abs(oldG - palette[i].g);
+        diffG = abs(oldG - palette[i].g);
         if (diffG < smallestDiffG) {
             smallestDiffG = diffG;
             *G = palette[i].g;
@@ -455,8 +593,8 @@ void Funkcja3() {
             kolor.g = G;
             kolor.b = B;
 
-            closest(&R,&G,&B, &bladR, &bladG, &bladB);
-           
+            closest(&R, &G, &B, &bladR, &bladG, &bladB);
+
             setPixel(x + szerokosc / 2, y, R, G, B);
 
             bledyR[x + przesuniecie + 1][y] += (bladR * 7.0 / 16.0);
@@ -477,17 +615,7 @@ void Funkcja3() {
         }
     }
 
-    ileKolorow = 0;
-    for (int x = szerokosc / 2; x < szerokosc; x++) {
-        for (int y = 0; y < wysokosc / 2; y++) {
-            kolor = getPixel(x, y);
-            sprawdzKolor(kolor);
-        }
-    }
-    cout << ileKolorow;
-
     SDL_UpdateWindowSurface(window);
-
 
 }
 
@@ -497,6 +625,7 @@ void Funkcja4() {
     SDL_Color kolor;
     int BW;
     //int BW;
+
     for (int x = 0; x < szerokosc / 2; x++) {
         for (int y = 0; y < wysokosc / 2; y++) {
 
@@ -504,14 +633,16 @@ void Funkcja4() {
             R = kolor.r;
             G = kolor.g;
             B = kolor.b;
-           
+
             BW = 0.299 * R + 0.587 * G + 0.114 * B;
-            setPixel(x+szerokosc/2, y + wysokosc / 2, BW, BW, BW);
-           BW=BW >> 3;
+            //setPixel(x + szerokosc / 2, y + wysokosc / 2, BW, BW, BW);
+            BW = BW >> 3;
             BW = BW << 3;
-           // BW = round((BW * 32) / 255);
+            // BW = round((BW * 32) / 255);
+           //sprawdzKolor(BW);
+
             setPixel(x + szerokosc / 2, y, BW, BW, BW);
-  
+
         }
     }
 
@@ -519,33 +650,32 @@ void Funkcja4() {
 
 }
 
-SDL_Color* createBWpalette() {
-    SDL_Color* bwPalette = new SDL_Color[32];
+void createBWpalette() {
+   
     SDL_Color color;
     for (int i = 0; i < 32; i++) {
         color.r = i * 8;
         color.g = i * 8;
         color.b = i * 8;
-        bwPalette[i] = color;
+        dopasowanaPaleta[i] = color;
     }
-    return bwPalette;
+   
 }
 
 int closestBW(int BW) {
-    SDL_Color* palette=createBWpalette();
+    createBWpalette();
     int diff = 0;
     int smallestDiff = 255;
     int oldBW = BW;
     for (int i = 0; i < 32; i++) {
-        diff = abs(oldBW - palette[i].r);
+        diff = abs(oldBW - dopasowanaPaleta[i].r);
         if (diff < smallestDiff) {
             smallestDiff = diff;
-            BW = palette[i].r;
+            BW = i;
         }
 
     }
-    oldBW = BW;
-    return oldBW;
+    return BW;
 }
 void Funkcja5() {
 
@@ -554,21 +684,19 @@ void Funkcja5() {
 
     int przesuniecie = 1;
     int blad = 0;
-    int BW = 0; 
+    int BW = 0;
     int oldBW = 0;
     SDL_Color kolor;
     for (int x = 0; x < szerokosc / 2; x++) {
         for (int y = 0; y < wysokosc / 2; y++) {
             kolor = getPixel(x, y);
-        
-
             BW = 0.299 * kolor.r + 0.587 * kolor.g + 0.114 * kolor.b;
             BW += bledy[x + przesuniecie][y];
             oldBW = BW;
-            BW= closestBW(BW);
-           
+            BW = dopasowanaPaleta[closestBW(BW)].r;
+
             blad = oldBW - BW;//r,g,b sa takie same
-            setPixel(x+szerokosc/2, y, BW, BW, BW);
+            setPixel(x + szerokosc / 2, y, BW, BW, BW);
             kolor.r = BW;
             kolor.g = BW;
             kolor.b = BW;
@@ -611,36 +739,8 @@ void Funkcja6() {
 void najblizszaDopasowana(int* R, int* G, int* B, int* bladR, int* bladG, int* bladB) {
 
     int oldR = *R, oldG = *G, oldB = *B;
-    int diffR = 0, diffG = 0, diffB = 0;
-    int smallestDiffR = 255, smallestDiffG = 255, smallestDiffB = 255;
-    /*
-    for (int i = 0; i < 32; i++) {
-        diffR = abs(oldR - dopasowanaPaleta[i].r);
-        if (diffR < smallestDiffR) {
-            smallestDiffR = diffR;
-            *R = dopasowanaPaleta[i].r;
-            *bladR = oldR - *R;
-        }
-
-        diffG = abs(oldG - dopasowanaPaleta[i].g);
-        if (diffG < smallestDiffG) {
-            smallestDiffG = diffG;
-            *G = dopasowanaPaleta[i].g;
-            *bladG = oldG - *G;
-        }
-
-        diffB = abs(oldB - dopasowanaPaleta[i].b);
-        if (diffB < smallestDiffB) {
-            smallestDiffB = diffB;
-            *B = dopasowanaPaleta[i].b;
-            *bladB = oldB - *B;
-        }
-    }*/
-    
     int minRoznica = INT_MAX;   // minimalna roznica znaleziona w 
-    int roznica{};              // roznica liczona w kazdej iteracji
-    int minIndeks{};            // indeks najblizszego znalezionego koloru
-
+    int roznica = 0;              // roznica liczona w kazdej iteracji
 
     // przeszukaj cala palete dopasowanych barw 
     for (int i = 0; i < dopasowanychKolorow; i++) {
@@ -653,7 +753,6 @@ void najblizszaDopasowana(int* R, int* G, int* B, int* bladR, int* bladG, int* b
 
         // sprawdz czy aktualna roznica jest minimalna
         if (roznica < minRoznica) {
-            minIndeks = i;
             minRoznica = roznica;
 
             *R = dopasowanaPaleta[i].r;
@@ -675,19 +774,22 @@ void Funkcja7() {
     medianCut();
     SDL_Color kolor;
     float bledyR[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
-    memset(bledyR, 0, sizeof(bledyR));
     float bledyG[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
-    memset(bledyG, 0, sizeof(bledyG));
     float bledyB[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
-    memset(bledyB, 0, sizeof(bledyB));
     float bledy[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
-    memset(bledy, 0, sizeof(bledy));
 
     int przesuniecie = 1;
     int bladR = 0, bladG = 0, bladB = 0;
-
     int R, G, B;
     int i = 0;
+
+    memset(bledyR, 0, sizeof(bledyR));
+    memset(bledyG, 0, sizeof(bledyG));
+    memset(bledyB, 0, sizeof(bledyB));
+    memset(bledy, 0, sizeof(bledy));
+
+    medianCut();
+    dopasowana = true;
 
     for (int x = 0; x < szerokosc / 2; x++) {
         for (int y = 0; y < wysokosc / 2; y++) {
@@ -701,9 +803,9 @@ void Funkcja7() {
             kolor.g = G;
             kolor.b = B;
 
-           
+
             najblizszaDopasowana(&R, &G, &B, &bladR, &bladG, &bladB);
-            setPixel(x + szerokosc / 2, y+wysokosc/2, R, G, B);
+            setPixel(x + szerokosc / 2, y, R, G, B);
 
             bledyR[x + przesuniecie + 1][y] += (bladR * 7.0 / 16.0);
             bledyR[x + przesuniecie - 1][y + 1] += (bladR * 3.0 / 16.0);
@@ -723,26 +825,81 @@ void Funkcja7() {
         }
     }
 
-    ileKolorow = 0;
-    for (int x = 0; x < szerokosc / 2; x++) {
-        for (int y = 0; y < wysokosc / 2; y++) {
-            kolor = getPixel(x + szerokosc /2 , y+ wysokosc/2);
-            sprawdzKolor(kolor);
+
+    SDL_UpdateWindowSurface(window);
+
+}
+
+//Funkcja odczytuje w pętli zewnętrznej kolejne bajty w postaci zmiennej typu Uint8 natomiast w pętli wewnętrznej rozbija bajt na osiem bitów i zapisuje je pod kolejnymi indeksami w tablicy
+void konwersjaUint8naBool(ifstream& wejscie, bool* skladowa) {
+
+    int iterator = 0;
+    Uint8 odczytaneDane = 0;
+    for (int i = 0; i < 5; i++) {
+        wejscie.read((char*)&odczytaneDane, sizeof(Uint8));
+        for (int j = 0; j < 8; j++) {
+            if ((int)odczytaneDane >= 128) {
+                skladowa[iterator] = 1;
+            }
+            else
+                skladowa[iterator] = 0;
+            odczytaneDane <<= 1;
+            iterator++;
         }
     }
-    cout << ileKolorow;
-
-    SDL_UpdateWindowSurface(window);
 
 }
 
+//aktulnie funkcja odczytuje z pliku obraz zapisany za pomocą funkcji, w której wykonywane jest przesunięcie bitowe
 void Funkcja8() {
 
-    //...
+    Uint16 szerokoscObrazka = szerokosc / 2;
+    Uint16 wysokoscObrazka = wysokosc / 2;
+    int R = 0, G = 0, B = 0;
+    bool skladowa[40]{ 0 };
+    ifstream wejscie("obrazProjekt.bin", ios::binary);
+
+    konwersjaUint8naBool(wejscie, skladowa);
+
+    int osiemBitow = 0;
+    int i = 0;
+    for (int x = 0; x < szerokosc / 2; x++) {
+        for (int y = 0; y < wysokosc / 2; y++) {
+
+            if (osiemBitow == 8) {
+                konwersjaUint8naBool(wejscie, skladowa);
+                osiemBitow = 0;
+                i = 0;
+            }
+            osiemBitow++;
+
+            R = skladowa[i];
+            R <<= 1;
+            i++;
+            R += skladowa[i];
+            R <<= 6;
+
+            i++;
+            G = skladowa[i];
+            G <<= 1;
+            i++;
+            G += skladowa[i];
+            G <<= 6;
+
+            i++;
+            B = skladowa[i];
+            B <<= 7;
+            i++;
+
+            setPixel(x + szerokoscObrazka, y + wysokoscObrazka, R, G, B);
+
+        }
+
+    }
 
     SDL_UpdateWindowSurface(window);
+    wejscie.close();
 }
-
 void Funkcja9() {
 
     //...
