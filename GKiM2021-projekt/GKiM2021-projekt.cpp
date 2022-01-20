@@ -1,4 +1,4 @@
-﻿#include <exception>
+#include <exception>
 #include <string.h>
 #include <iostream>
 #include <fstream>
@@ -326,6 +326,10 @@ int znajdzNajlbizszegoSasiada(SDL_Color kolor) {
 
 
 
+//Funkcja zapisuje dane do pliku zamieniając wcześniej dane z postaci binarnej na postać dziesiętną
+
+
+
 void zapisz5bitDoPliku(ofstream& wyjscie, bool* tablica40bitow, int& ileZapisanych) {
 
     Uint8 zmienna = 0;
@@ -333,6 +337,9 @@ void zapisz5bitDoPliku(ofstream& wyjscie, bool* tablica40bitow, int& ileZapisany
     for (int i = 0; i < ileZapisanych; i++) {
         zmienna += tablica40bitow[i];
         iterator++;
+
+        //zapisywanie kolejnych bajtów do pliku
+
         if (iterator == 8) {
             wyjscie.write((char*)&zmienna, sizeof(Uint8));
             iterator = 0;
@@ -344,12 +351,18 @@ void zapisz5bitDoPliku(ofstream& wyjscie, bool* tablica40bitow, int& ileZapisany
 
 }
 
+
+//Funkcja zeruje tablice przechowującą wcześniej zapisane bity
+
 void zerujTabliceBitow(bool* tablica40bitow, int& ileZapisanych) {
 
     for (int i = 0; i < ileZapisanych; i++) {
         tablica40bitow[i] = 0;
     }
 }
+
+
+//Funkcja zamienia liczby z postaci dziesiętnej na postać binarną oraz zapisuje kolejne bity do tablicy tablica40bitów
 
 void konwersja10na2(ofstream& wyjscie, int liczba, bool* tablica40bitow, int& ileZapisanych) {
 
@@ -361,11 +374,15 @@ void konwersja10na2(ofstream& wyjscie, int liczba, bool* tablica40bitow, int& il
         i++;
     }
 
+    //zapisanie kolejnych bitów do tablicy 
+
     for (int j = i - 1; j >= 0; j--) {
         tablica40bitow[ileZapisanych] = tab[j];
         ileZapisanych++;
     }
 
+
+    //jeśli w tablicy przechowującej bity zapisana została sekwencja kolejnych 40 bitów zostaje wywołana funkcja do zapisywania danych do pliku
 
     if (ileZapisanych == 40) {
         zapisz5bitDoPliku(wyjscie, tablica40bitow, ileZapisanych);
@@ -375,12 +392,17 @@ void konwersja10na2(ofstream& wyjscie, int liczba, bool* tablica40bitow, int& il
 
 }
 
+
+//Funkcja, która zamienia wartość spod zmiennej SDL_Color na wartość pięcio bitową  
+
 void konwersja10na2(ofstream& wyjscie, SDL_Color kolor, bool* tablica40bitow, int& ileZapisanych) {
     int wartosc = ((kolor.r & 192) >> 3) + ((kolor.g & 192) >> 5) + ((kolor.b & 128) >> 7);
     konwersja10na2(wyjscie, wartosc, tablica40bitow, ileZapisanych);
 
 }
 
+
+//Funkcja wykonująca przesunięcie bitowe
 
 void Funkcja1() {
 
@@ -399,8 +421,9 @@ void Funkcja1() {
     int R, G, B;
 
 
-    for (int y = 0; y < wysokosc / 2; y++) {
-        for (int x = 0; x < szerokosc / 2; x++) {
+    for (int x = 0; x < szerokosc / 2; x++) {
+        for (int y = 0; y < wysokosc / 2; y++) {
+        
             kolor = getPixel(x, y);
             R = kolor.r;
             G = kolor.g;
@@ -411,14 +434,6 @@ void Funkcja1() {
             G = G >> 6;
             B = B >> 7;
 
-
-            //if (ileZapisanych >= 34 and y == 40) {
-            //    cout << "ZAPIS x = "<< x <<" :";
-            //    for (int i = 0; i < ileZapisanych; i++) {
-            //        cout << tablica40bitow[i] << " ";
-            //    }
-            //    cout << endl;
-            //}
             konwersja10na2(wyjscie, kolor, tablica40bitow, ileZapisanych);
 
             //powrót do wartości składowych RGB w pełnym zakresie
@@ -429,6 +444,7 @@ void Funkcja1() {
             kolor.r = R;
             kolor.g = G;
             kolor.b = B;
+
 
 
             // dodaj kolor do palety
@@ -819,69 +835,49 @@ int boolToInt(bool* zmienna1, int dlugosc) {
     return zmienna2;
 }
 
+//Funkcja odczytuje w pętli zewnętrznej kolejne bajty w postaci zmiennej typu Uint8 natomiast w pętli wewnętrznej rozbija bajt na osiem bitów i zapisuje je pod kolejnymi indeksami w tablicy
+void konwersjaUint8naBool(ifstream& wejscie,bool* skladowa ) {
+
+    int iterator = 0;
+    Uint8 odczytaneDane = 0;
+    for (int i = 0; i < 5; i++) {
+        wejscie.read((char*)&odczytaneDane, sizeof(Uint8));
+        for (int j = 0; j < 8; j++) {
+            if ((int)odczytaneDane >= 128) {
+                skladowa[iterator] = 1;
+            }
+            else
+                skladowa[iterator] = 0;
+            odczytaneDane <<= 1;
+            iterator++;
+        }
+    }
+
+}
+//aktulnie funkcja odczytuje z pliku obraz zapisany za pomocą funkcji, w której wykonywane jest przesunięcie bitowe
 void Funkcja8() {
 
     Uint16 szerokoscObrazka = szerokosc / 2;
     Uint16 wysokoscObrazka = wysokosc / 2;
     int R = 0, G = 0, B = 0;
-    int dlugosc = 0;
+
     bool skladowa[40]{ 0 };
-    Uint8 zmienna;
     ifstream wejscie("obrazProjekt.bin", ios::binary);
-    int iterator = 0;
 
-
-    //for (int i = 0; i < 40; i++) {
-    //    cout << skladowa[i] << " ";
-    //}
-
-
-
-    for (int i = 0; i < 5; i++) {
-        wejscie.read((char*)&zmienna, sizeof(Uint8));
-        cout << (int)zmienna << " ";
-        for (int j = 0; j < 8; j++) {
-            if ((int)zmienna >= 128) {
-                skladowa[iterator] = 1;
-            }
-            else
-                skladowa[iterator] = 0;
-            zmienna <<= 1;
-            iterator++;
-        }
-    }
-
-    int osiem = 0;
+    konwersjaUint8naBool(wejscie,skladowa);
+    
+    int osiemBitow = 0;
     int i = 0;
-    for (int y = 0; y < wysokoscObrazka; y++) {
-        for (int x = 0; x < szerokoscObrazka; x++) {
+    for (int x = 0; x < szerokosc / 2; x++) {
+        for (int y = 0; y < wysokosc / 2; y++) {
 
-            if (osiem == 8) {
-                iterator = 0;
-                for (int i = 0; i < 5; i++) {
-                    wejscie.read((char*)&zmienna, sizeof(Uint8));
-                    for (int j = 0; j < 8; j++) {
-                        if ((int)zmienna >= 128) {
-                            skladowa[iterator] = 1;
-                        }
-                        else
-                            skladowa[iterator] = 0;
-                        zmienna <<= 1;
-                        iterator++;
-                    }
-                }
-                osiem = 0;
+            if (osiemBitow == 8) {
+                konwersjaUint8naBool(wejscie, skladowa);
+                osiemBitow = 0;
                 i = 0;
             }
-            osiem++;
+            osiemBitow++;
 
-            if (y == 40) {
-                cout << "Odczyt = " << x << " :";
-                for (int i = 0; i < 40; i++) {
-                    cout << skladowa[i] << " ";
-                }
-                cout << endl;
-            }
 
             R = skladowa[i];
             R <<= 1;
@@ -902,23 +898,8 @@ void Funkcja8() {
             i++;
 
 
-            ////odczytanie wartości R
-            //dlugosc = 1;
-            //wejscie.read((char*)&skladowa, sizeof(bool) * 2);
-            //R = boolToInt(skladowa, R, dlugosc);
+            setPixel(x + szerokoscObrazka, y + wysokoscObrazka, R, G, B);
 
-            ////odczytanie wartości G
-            //dlugosc = 1;
-            //wejscie.read((char*)&skladowa, sizeof(bool) * 2);
-            //G = boolToInt(skladowa, G, dlugosc);
-
-            //odczytanie wartości B
-            //dlugosc = 0;
-            //wejscie.read((char*)&skladowa, sizeof(bool) * 1);
-            //B = boolToInt(skladowa, B, dlugosc);
-
-            setPixel(x, y + wysokoscObrazka, R, G, B);
-            SDL_UpdateWindowSurface(window);
 
         }
 
