@@ -17,8 +17,6 @@ SDL_Surface* screen = NULL;
 
 #define tytul "GKiM2021 - projekt"
 
-//
-
 void setPixel(int x, int y, Uint8 R, Uint8 G, Uint8 B);
 SDL_Color getPixel(int x, int y);
 
@@ -48,6 +46,7 @@ void Funkcja9();
 
 SDL_Color paleta[szerokosc / 2 * wysokosc / 2];
 SDL_Color dopasowanaPaleta[32];
+int ideksy[szerokosc / 2*wysokosc / 2];
 int ileKolorow = 0;
 int dopasowanychKolorow = 0;
 int dopasowana = false;
@@ -626,6 +625,7 @@ void Funkcja4() {
     SDL_Color kolor;
     int BW;
     //int BW;
+
     for (int x = 0; x < szerokosc / 2; x++) {
         for (int y = 0; y < wysokosc / 2; y++) {
 
@@ -639,6 +639,8 @@ void Funkcja4() {
             BW = BW >> 3;
             BW = BW << 3;
             // BW = round((BW * 32) / 255);
+           //sprawdzKolor(BW);
+
             setPixel(x + szerokosc / 2, y, BW, BW, BW);
 
         }
@@ -648,33 +650,32 @@ void Funkcja4() {
 
 }
 
-SDL_Color* createBWpalette() {
-    SDL_Color* bwPalette = new SDL_Color[32];
+void createBWpalette() {
+   
     SDL_Color color;
     for (int i = 0; i < 32; i++) {
         color.r = i * 8;
         color.g = i * 8;
         color.b = i * 8;
-        bwPalette[i] = color;
+        dopasowanaPaleta[i] = color;
     }
-    return bwPalette;
+   
 }
 
 int closestBW(int BW) {
-    SDL_Color* palette = createBWpalette();
+    createBWpalette();
     int diff = 0;
     int smallestDiff = 255;
     int oldBW = BW;
     for (int i = 0; i < 32; i++) {
-        diff = abs(oldBW - palette[i].r);
+        diff = abs(oldBW - dopasowanaPaleta[i].r);
         if (diff < smallestDiff) {
             smallestDiff = diff;
-            BW = palette[i].r;
+            BW = i;
         }
 
     }
-    oldBW = BW;
-    return oldBW;
+    return BW;
 }
 void Funkcja5() {
 
@@ -689,12 +690,10 @@ void Funkcja5() {
     for (int x = 0; x < szerokosc / 2; x++) {
         for (int y = 0; y < wysokosc / 2; y++) {
             kolor = getPixel(x, y);
-
-
             BW = 0.299 * kolor.r + 0.587 * kolor.g + 0.114 * kolor.b;
             BW += bledy[x + przesuniecie][y];
             oldBW = BW;
-            BW = closestBW(BW);
+            BW = dopasowanaPaleta[closestBW(BW)].r;
 
             blad = oldBW - BW;//r,g,b sa takie same
             setPixel(x + szerokosc / 2, y, BW, BW, BW);
