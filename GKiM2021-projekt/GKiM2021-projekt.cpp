@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include <SDL.h>
-#include <set>
 using namespace std;
 
 SDL_Window* window = NULL;
@@ -80,7 +79,7 @@ void wyswieltPalete() {
                 setPixel(x, y + wysokosc / 2, dopasowanaPaleta[i].r, dopasowanaPaleta[i].g, dopasowanaPaleta[i].b);
             }
         }
-
+    
     // jesli uzyta zostala narzucona paleta wyswietl ja
     if (!dopasowana and ileKolorow > 0 and ileKolorow < szerokosc)
         for (int x = 0; x < szerokosc; x++) {
@@ -417,6 +416,7 @@ void Funkcja1() {
     Uint8 wartosc = 0;
     int R, G, B;
 
+    cout << "1. Przesuniecie bitowe\n";
 
     for (int x = 0; x < szerokosc / 2; x++) {
         for (int y = 0; y < wysokosc / 2; y++) {
@@ -473,6 +473,9 @@ void Funkcja2() {
     int R, G, B;
     ileKolorow = 0;
     dopasowana = false;
+
+    cout << "2. Poszukiwanie najblizszego sasiada\n";
+
 
     for (int y = 0; y < wysokosc / 2; y++)
     {
@@ -581,6 +584,8 @@ void Funkcja3() {
     int R, G, B;
     int i = 0;
 
+    cout << "3. dithering\n";
+
     for (int x = 0; x < szerokosc / 2; x++) {
         for (int y = 0; y < wysokosc / 2; y++) {
 
@@ -625,6 +630,8 @@ void Funkcja4() {
     SDL_Color kolor;
     int BW;
     //int BW;
+
+    cout << "4. Skala szarosci\n";
 
     for (int x = 0; x < szerokosc / 2; x++) {
         for (int y = 0; y < wysokosc / 2; y++) {
@@ -687,6 +694,9 @@ void Funkcja5() {
     int BW = 0;
     int oldBW = 0;
     SDL_Color kolor;
+
+    cout << "5. Skala szarosci z ditheringiem\n";
+
     for (int x = 0; x < szerokosc / 2; x++) {
         for (int y = 0; y < wysokosc / 2; y++) {
             kolor = getPixel(x, y);
@@ -718,6 +728,8 @@ void Funkcja6() {
 
     int dopasowanyIndeks{};
     SDL_Color kolor;
+
+    cout << "6. poszukiwanie najblizszego sasiada dla dopasowanej palety\n";
 
     // skorzytaj z algorytu median cut do dopasowania palety
     dopasowana = true;
@@ -771,7 +783,6 @@ void najblizszaDopasowana(int* R, int* G, int* B, int* bladR, int* bladG, int* b
 
 void Funkcja7() {
 
-    medianCut();
     SDL_Color kolor;
     float bledyR[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
     float bledyG[(szerokosc / 2) + 2][(wysokosc / 2) + 1];
@@ -788,6 +799,8 @@ void Funkcja7() {
     memset(bledyB, 0, sizeof(bledyB));
     memset(bledy, 0, sizeof(bledy));
 
+
+    cout << "7. dithering dla dopasowanej palety\n";
     medianCut();
     dopasowana = true;
 
@@ -858,6 +871,8 @@ void Funkcja8() {
     int R = 0, G = 0, B = 0;
     bool skladowa[40]{ 0 };
     ifstream wejscie("obrazProjekt.bin", ios::binary);
+
+    cout << "8. Odczyt z pliku\n";
 
     konwersjaUint8naBool(wejscie, skladowa);
 
