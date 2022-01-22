@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <SDL.h>
+#include <string>
 using namespace std;
 
 SDL_Window* window = NULL;
@@ -56,7 +57,28 @@ int dopasowana = true;
 int ileZapisanych = 0;
 bool tablica40bitow[40]{};
 void wybierzObrazek();
-
+void waitEvent(SDL_Event* event,string s) {
+    bool done = false;
+    cout << s;
+    /*while (!done) {
+        SDL_WaitEvent(*&event);
+        if (SDL_PollEvent(event))
+            done = true;
+    }*/
+    while (true)
+    {
+        // Get the next event
+        SDL_Event event;
+        if (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+            {
+                // Break out of the loop on quit
+                break;
+            }
+        }
+    }
+}
 void menu() {
     bool kolor = 0;                 //wybór między paletą kolorową, a skalą szarości (true - kolorowa, false - skala szarości)
     bool odczyt = 0;                //wybór odczytu lub zapisu pliku (true - odczyt, false - zapis)
@@ -67,9 +89,10 @@ void menu() {
     bool done = false;
     SDL_Event event;
 
-    cout << "1. Odczyt bmp\n2. Odczyt nasze ";
+    //cout << "1. Odczyt bmp\n2. Odczyt nasze ";
     while (!done) {
-        SDL_WaitEvent(&event);
+       // SDL_WaitEvent(&event);
+        waitEvent(&event, "1. Odczyt bmp\n2. Odczyt nasze ");
         switch (event.type) {
         case SDL_KEYDOWN: {
             if (event.key.keysym.sym == SDLK_1)
@@ -1639,6 +1662,7 @@ int main(int argc, char* argv[]) {
 
     bool done = false;
     SDL_Event event;
+    
     menu();
     /*
     // główna pętla programu
