@@ -96,101 +96,99 @@ void menu() {
         bool metoda = 0;                //wybór między przesunięciem, a najbliższym sąsiadem (true - przesunięcia bitowe, false - najbliższy sąsiad)
         bool wybor = false;
         bool done = false;
-        while (!done) {
-            //SDL_WaitEvent(&event);
-            waitEvent("1. Odczyt bmp\n2. Odczyt nasze", &odczyt);
 
-            if (odczyt)
-            {
-                wybierzObrazek();
+        //SDL_WaitEvent(&event);
+        waitEvent("1. Odczyt bmp\n2. Odczyt nasze\n", &odczyt);
 
-
-                waitEvent("\nCzy obraz ma byc kolorowy?\n1. Tak\n2. Nie", &kolor);
-
-                if (kolor)
-                    waitEvent("\nWybierz tryb koloru:\n1. Paleta narzucona\n2. Paleta dopasowana", &narzucona);
+        if (odczyt)
+        {
+            wybierzObrazek();
 
 
-                waitEvent("\nCzy obraz ma byc poddany ditheringowi?\n1. Tak\n2. Nie", &dithering);
+            waitEvent("\nCzy obraz ma byc kolorowy?\n1. Tak\n2. Nie\n", &kolor);
+
+            if (kolor)
+                waitEvent("\nWybierz tryb koloru:\n1. Paleta narzucona\n2. Paleta dopasowana\n", &narzucona);
 
 
-                if (kolor == true && narzucona == true && dithering == false)
-                    waitEvent("\nWybierz metode:\n1. Przesuniecie bitowe\n2. Poszukiwanie najblizszego sasiada", &metoda);
+            waitEvent("\nCzy obraz ma byc poddany ditheringowi?\n1. Tak\n2. Nie\n", &dithering);
 
-                waitEvent("\nCzy wyswietlic wybrane opcje?\n1. Tak\n2. Nie", &wybor);
-                done = true;
-            }
-            else if (!odczyt) {
-                Funkcja8();
-                done = true;
-            }
 
-            if (done) break;
+            if (kolor == true && narzucona == true && dithering == false)
+                waitEvent("\nWybierz metode:\n1. Przesuniecie bitowe\n2. Poszukiwanie najblizszego sasiada\n", &metoda);
+
+            waitEvent("\nCzy wyswietlic wybrane opcje?\n1. Tak\n2. Nie\n", &wybor);
+
         }
 
-        if (kolor == true) {
-            if (narzucona == true) {
-                if (dithering == true) {
-                    Funkcja3();
-                }
-                else {
-                    if (metoda == true) {
-                        Funkcja1();
+        if (odczyt) {
+            if (kolor == true) {
+                if (narzucona == true) {
+                    if (dithering == true) {
+                        Funkcja3();
                     }
                     else {
-                        Funkcja2();
+                        if (metoda == true) {
+                            Funkcja1();
+                        }
+                        else {
+                            Funkcja2();
+                        }
+                    }
+                }
+                else {
+                    if (dithering == true) {
+                        Funkcja7();
+                    }
+                    else {
+                        Funkcja6();
                     }
                 }
             }
             else {
                 if (dithering == true) {
-                    Funkcja7();
+                    Funkcja5();
                 }
                 else {
-                    Funkcja6();
+                    Funkcja4();
+                }
+            }
+
+
+            if (wybor) {
+                if (kolor)
+                    cout << "\nSkala szarosci: tak";
+                else
+                    cout << "\nSkala szarosci: nie";
+
+                if (narzucona)
+                    cout << "\nTryb kolorow: paleta narzucona";
+                else
+                    cout << "\nTryb kolorow: paleta dedykowana";
+
+                if (dithering)
+                    cout << "\nDithering: tak";
+                else
+                    cout << "\nDithering: nie";
+
+                if (kolor == true && narzucona == true) {
+                    if (metoda)
+                        cout << "\nMetoda: Przesuniecie bitowe";
+                    else
+                        cout << "\nMetoda: Poszukiwanie najblizszego sasiada";
                 }
             }
         }
-        else {
-            if (dithering == true) {
-                Funkcja5();
-            }
-            else {
-                Funkcja4();
-            }
-        }
 
-
-        if (wybor) {
-            if (kolor)
-                cout << "\nSkala szarosci: tak";
-            else
-                cout << "\nSkala szarosci: nie";
-
-            if (narzucona)
-                cout << "\nTryb kolorow: paleta narzucona";
-            else
-                cout << "\nTryb kolorow: paleta dedykowana";
-
-            if (dithering)
-                cout << "\nDithering: tak";
-            else
-                cout << "\nDithering: nie";
-
-            if (kolor == true && narzucona == true) {
-                if (metoda)
-                    cout << "\nMetoda: Przesuniecie bitowe";
-                else
-                    cout << "\nMetoda: Poszukiwanie najblizszego sasiada";
-            }
-        }
-        waitEvent("\n1. Kontynuuj\n2. Koniec programu ", &quit);
+        else if (!odczyt)
+            Funkcja8();
+        waitEvent("\n\n1. Kontynuuj\n2. Koniec programu\n\n", &quit);
     }
 
 }
 
 void wybierzObrazek() {
-        cout << "\nPodaj literke obrazka(a-k)\nWcisnij escape po jego wybraniu";
+        cout << "\nPodaj literke obrazka(a-k)\nWcisnij escape po jego wybraniu\n";
         // główna pętla programu
         bool done = false;
         SDL_Event event;
@@ -795,7 +793,7 @@ void Funkcja3() {
     int R, G, B;
     int i = 0;
     int indeks{};
-    cout << "\n3. dithering\n";
+    cout << "3. dithering\n";
     wyjscie.write((char*)&wariant, sizeof(char));
 
     for (int x = 0; x < szerokosc / 2; x++) {
