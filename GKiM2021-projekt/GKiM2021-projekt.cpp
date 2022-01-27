@@ -287,6 +287,7 @@ void menu() {
             else{
                 cout << "RLE";
                 zapiszRLE(rozmiarRLE);
+               // zapisz();
                 
             }
             
@@ -317,6 +318,7 @@ void menu() {
 
         else if (!odczyt)
             Funkcja8();
+
         waitEvent("\n\n1. Kontynuuj\n2. Koniec programu\n\n", &quit);
     }
 
@@ -1310,7 +1312,7 @@ int kompresjaRLE() {
 
     while (i < dlugosc)
     {
-        if (rozmiar >= wielkoscObrazka - 6) //jeśli istnieje szansa przepełnienia tablicy w następnej iteracji zakończ działanie
+        if (rozmiar >= wielkoscObrazka - 4) //jeśli istnieje szansa przepełnienia tablicy w następnej iteracji zakończ działanie
             return INT_MAX;
         //sekwencja powtarzania sie co najmniej 2 bajtow
         if (i < dlugosc - 1 && indeksy[i] == indeksy[i + 1])
@@ -1324,7 +1326,7 @@ int kompresjaRLE() {
 
             //wypisujemy spakowana sekwencje
             indeksyRLE[rozmiar++] = j + 1;
-            indeksyRLE[rozmiar++] = i + j; 
+            indeksyRLE[rozmiar++] = indeksy[i + j]; 
             //przesuwamy wskaznik o dlugosc sekwencji 
             i += (j + 1);
 
@@ -1351,7 +1353,9 @@ int kompresjaRLE() {
 
             for (int k = 0; k < j; k++)
             {
-                indeksyRLE[rozmiar++] = i + k;
+                if (rozmiar >= wielkoscObrazka - 2) //jeśli istnieje szansa przepełnienia tablicy w następnej iteracji zakończ działanie
+                    return INT_MAX;
+                indeksyRLE[rozmiar++] = indeksy[i + k];
             }
 
             if (j % 2 != 0)
@@ -1388,7 +1392,6 @@ void dekompresjaRLE()
             for (int j = 0; j < indeksyRLE[i]; j++)
             {
                 indeksy[iterator++] = indeksyRLE[i + 1];   
-                
             }
             //przesuwamy wskaznik o dlugosc sekwencji
             i += 2;
@@ -1399,7 +1402,6 @@ void dekompresjaRLE()
             for (int j = 0; j < ile; j++)
             {
               indeksy[iterator++] = indeksyRLE[i + 1 + j + 1];
-                
             }
 
             //przesuwamy wskaznik o dlugosc sekwencji
@@ -1422,7 +1424,6 @@ void Funkcja9() {
 int dodajKolor(SDL_Color kolor) {
     int aktualnyKolor = ileKolorow;
     paleta[aktualnyKolor] = kolor;
-    //cout << aktualnyKolor << ": [" << (int)kolor.r << "," << (int)kolor.g << "," << (int)kolor.b << "]" << endl;
     ileKolorow++;
     return (aktualnyKolor);
 }
