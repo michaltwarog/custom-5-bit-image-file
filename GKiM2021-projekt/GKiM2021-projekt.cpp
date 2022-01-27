@@ -51,9 +51,9 @@ void dekompresjaRLE();
 void konwersjaUint8naBool(ifstream& wejscie, bool* skladowa);
 
 void zapisz();
-void zapiszRLE();
-void otworzPlik();
-void zapiszPlik();
+void zapiszRLE(int rozmiarRLE);
+void otworzPlik(string def_name = "");
+void zapiszPlik(string def_name = "");
 void odczytajPalete(ifstream& wejscie);
 
 void wypiszPalete();
@@ -72,7 +72,7 @@ void Funkcja4();
 void Funkcja5();
 void Funkcja6();
 void Funkcja7();
-void Funkcja8();
+void Funkcja8(string def_name = "");
 void Funkcja9();
 
 const int wielkoscObrazka = szerokosc / 2 * wysokosc / 2; // wielkosc odczytywanego/zapisywanego obrazka           
@@ -137,15 +137,20 @@ void zapiszRLE(int rozmiarRLE){
     wyjscie.close();
 }
 
-void otworzPlik() {
-	char nazwa[30];
-	std::cout << "Podaj nazwe pliku do otwarcia: ";
-	std::cin >> nazwa;
-	int dlugoscNazwy = strlen(nazwa);
-	char* nazwaF = nullptr;
-	nazwaF = sprawdzanieNazwy(nazwa, dlugoscNazwy);
+void otworzPlik(string def_name) {
+    if (def_name != "") {
+        wejscie.open(def_name, ios::binary);
+    }
+    else {
+        char nazwa[30];
+        std::cout << "Podaj nazwe pliku do otwarcia: ";
+        std::cin >> nazwa;
+        int dlugoscNazwy = strlen(nazwa);
+        char* nazwaF = nullptr;
+        nazwaF = sprawdzanieNazwy(nazwa, dlugoscNazwy);
 
-	wejscie.open(nazwaF, ios::binary);
+        wejscie.open(nazwaF, ios::binary);
+    }
 
 	if (!wejscie.good()) {
         std::cout << "\nNie udało się otworzyć pliku!";
@@ -154,15 +159,21 @@ void otworzPlik() {
 	}
 }
 
-void zapiszPlik()
+void zapiszPlik(string def_name)
 {
-    char nazwa[30];
-    std::cout << "Podaj nazwe pliku do zapisu: ";
-    std::cin >> nazwa;
-    char* nazwaF = nullptr;
-    int dlugoscNazwy = strlen(nazwa);
-    nazwaF = sprawdzanieNazwy(nazwa, dlugoscNazwy);
-    wyjscie.open(nazwaF, ios::binary);
+    if (def_name != "") {
+        wyjscie.open(def_name, ios::binary);
+    }
+    else {
+        char nazwa[30];
+        std::cout << "Podaj nazwe pliku do zapisu: ";
+        std::cin >> nazwa;
+        char* nazwaF = nullptr;
+        int dlugoscNazwy = strlen(nazwa);
+        nazwaF = sprawdzanieNazwy(nazwa, dlugoscNazwy);
+        wyjscie.open(nazwaF, ios::binary);
+    }
+
     if (!wyjscie.good())
     {
         std::cout << "\nNie udało się otworzyć pliku do zapisu!";
@@ -196,6 +207,75 @@ char* sprawdzanieNazwy(char nazwa[], int dlugoscNazwy) {
 		}
 	}
 }
+
+void zapis_test() {
+    int rozmiarOryginalny = (wielkoscObrazka) * 5 / 8;
+
+    cout << "Wywolanie kompresji RLE." << endl;
+    int rozmiarRLE = kompresjaRLE();
+
+    cout << "\nPorownywanie wynikow kopresji RLE i wybranej konwersji obrazka...";
+    cout << "\nMetoda zapisu: ";
+
+    if (rozmiarOryginalny <= rozmiarRLE) {
+        cout << "\nBrak kompresji";
+        zapisz();
+    }
+    else {
+        cout << "\nRLE";
+        zapiszRLE(rozmiarRLE);
+
+    }
+    cout << endl;
+}
+
+void test() {
+    int czas = 1000;
+    string nazwa = "test.bin";
+    //wyjscie.open("test.bin", ios::binary);
+
+    for (int i = 1; i <= 8; i++) {
+        string obrazek = "obrazek1.bmp";
+        obrazek[7] = i+48;
+        zapiszPlik(nazwa);
+        ladujBMP(obrazek.c_str(), 0, 0);
+        Funkcja1();
+        zapis_test();
+        Funkcja8(nazwa);
+        SDL_Delay(czas);
+        zapiszPlik(nazwa);
+        Funkcja2();
+        zapis_test();
+        Funkcja8(nazwa);
+        SDL_Delay(czas);
+        zapiszPlik(nazwa);
+        Funkcja3();
+        zapis_test();
+        Funkcja8(nazwa);
+        SDL_Delay(czas);
+        zapiszPlik(nazwa);
+        Funkcja4();
+        zapis_test();
+        Funkcja8(nazwa);
+        SDL_Delay(czas);
+        zapiszPlik(nazwa);
+        Funkcja5();
+        zapis_test();
+        Funkcja8(nazwa);
+        SDL_Delay(czas);
+        zapiszPlik(nazwa);
+        Funkcja6();
+        zapis_test();
+        Funkcja8(nazwa);
+        SDL_Delay(czas);
+        zapiszPlik(nazwa);
+        Funkcja7();
+        zapis_test();
+        Funkcja8(nazwa);
+        SDL_Delay(czas);
+    }
+}
+
 
 void menu() {
    
@@ -390,7 +470,7 @@ void wyswieltPalete() {
     // jesli uzyta zostala dopasowana paleta wyswietl ja
     if (dopasowanychKolorow > 0){
         for (int x = 0; x < szerokosc; x++) {
-            if (x % (szerokosc / dopasowanychKolorow) == 0 and x != 0)
+            if (x % (szerokosc / dopasowanychKolorow) == 0 and x != 0 and i < dopasowanychKolorow-1)
                 i++;
             for (int y = 0; y < wysokosc / 16; y++) {
                 setPixel(x, y + wysokosc / 2, dopasowanaPaleta[i].r, dopasowanaPaleta[i].g, dopasowanaPaleta[i].b);
@@ -1045,6 +1125,7 @@ void Funkcja5() {
 
 void zapiszPalete(ofstream& wyjscie){
 
+    wyjscie.write((char*)&dopasowanychKolorow, sizeof(Uint8));
     for(int i = 0;i<dopasowanychKolorow;i++){
         wyjscie.write((char*)&dopasowanaPaleta[i].r, sizeof(Uint8));
         wyjscie.write((char*)&dopasowanaPaleta[i].g, sizeof(Uint8));
@@ -1214,16 +1295,17 @@ void konwersjaUint8naBool(ifstream& wejscie, bool* skladowa) {
 }
 
 void odczytajPalete(ifstream& wejscie){
-    for(int i=0; i<32;i++){
+
+    wejscie.read((char*)&dopasowanychKolorow, sizeof(Uint8));
+    for(int i=0; i<dopasowanychKolorow;i++){
         wejscie.read((char*)&dopasowanaPaleta[i].r, sizeof(Uint8));
         wejscie.read((char*)&dopasowanaPaleta[i].g, sizeof(Uint8));
         wejscie.read((char*)&dopasowanaPaleta[i].b, sizeof(Uint8));
     }
-    dopasowanychKolorow = 32;
 }
 
 //aktulnie funkcja odczytuje z pliku obraz zapisany za pomocą funkcji, w której wykonywane jest przesunięcie bitowe
-void Funkcja8() {
+void Funkcja8(string def_name) {
 
     Uint16 szerokoscObrazka = szerokosc / 2;
     Uint16 wysokoscObrazka = wysokosc / 2;
@@ -1233,7 +1315,7 @@ void Funkcja8() {
     char wariant[] = " "; 
     char kompresja[] = " "; 
 
-    otworzPlik();
+    otworzPlik(def_name);
     cout << "8. Odczyt z pliku\n";
 
     wejscie.read((char*)&wariant, sizeof(char));
@@ -1310,7 +1392,7 @@ int kompresjaRLE() {
 
     while (i < dlugosc)
     {
-        if (rozmiar >= wielkoscObrazka - 6) //jeśli istnieje szansa przepełnienia tablicy w następnej iteracji zakończ działanie
+        if (rozmiar >= wielkoscObrazka - 2) //jeśli istnieje szansa przepełnienia tablicy w następnej iteracji zakończ działanie
             return INT_MAX;
         //sekwencja powtarzania sie co najmniej 2 bajtow
         if (i < dlugosc - 1 && indeksy[i] == indeksy[i + 1])
@@ -1324,7 +1406,7 @@ int kompresjaRLE() {
 
             //wypisujemy spakowana sekwencje
             indeksyRLE[rozmiar++] = j + 1;
-            indeksyRLE[rozmiar++] = i + j; 
+            indeksyRLE[rozmiar++] = indeksy[i + j]; 
             //przesuwamy wskaznik o dlugosc sekwencji 
             i += (j + 1);
 
@@ -1351,7 +1433,9 @@ int kompresjaRLE() {
 
             for (int k = 0; k < j; k++)
             {
-                indeksyRLE[rozmiar++] = i + k;
+                if (rozmiar >= wielkoscObrazka - 2) //jeśli istnieje szansa przepełnienia tablicy w następnej iteracji zakończ działanie
+                    return INT_MAX;
+                indeksyRLE[rozmiar++] = indeksy[i + k];
             }
 
             if (j % 2 != 0)
@@ -1671,7 +1755,8 @@ int main(int argc, char* argv[]) {
 
     bool done = false;
     SDL_Event event;
-    
+
+    //test();
     menu(); //wywołanie aplikacji
 
     if (screen) {
