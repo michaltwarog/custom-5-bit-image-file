@@ -131,7 +131,7 @@ void otworzPlik() {
 	char* nazwaF = nullptr;
 	nazwaF = sprawdzanieNazwy(nazwa, dlugoscNazwy);
 
-	wejscie.open(nazwaF);
+	wejscie.open(nazwaF, ios::binary);
 
 	if (!wejscie.good()) {
         std::cout << "\nNie udało się otworzyć pliku!";
@@ -148,7 +148,7 @@ void zapiszPlik()
     char* nazwaF = nullptr;
     int dlugoscNazwy = strlen(nazwa);
     nazwaF = sprawdzanieNazwy(nazwa, dlugoscNazwy);
-    wyjscie.open(nazwaF);
+    wyjscie.open(nazwaF, ios::binary);
     if (!wyjscie.good())
     {
         std::cout << "\nNie udało się otworzyć pliku do zapisu!";
@@ -864,38 +864,6 @@ void createpalette() {
     }   
 }
 
-// void closest(int* R, int* G, int* B, int* bladR, int* bladG, int* bladB) {
-
-//     createpalette();
-
-//     int oldR = *R, oldG = *G, oldB = *B;
-//     int diffR = 0, diffG = 0, diffB = 0;
-//     int smallestDiffR = 255, smallestDiffG = 255, smallestDiffB = 255;
-
-//     for (int i = 0; i < 32; i++) {
-//         diffR = abs(oldR - dopasowanaPaleta[i].r);
-//         if (diffR < smallestDiffR) {
-//             smallestDiffR = diffR;
-//             *R = dopasowanaPaleta[i].r;
-//             *bladR = oldR - *R;
-//         }
-
-//         diffG = abs(oldG - dopasowanaPaleta[i].g);
-//         if (diffG < smallestDiffG) {
-//             smallestDiffG = diffG;
-//             *G = dopasowanaPaleta[i].g;
-//             *bladG = oldG - *G;
-//         }
-
-//         diffB = abs(oldB - dopasowanaPaleta[i].b);
-//         if (diffB < smallestDiffB) {
-//             smallestDiffB = diffB;
-//             *B = dopasowanaPaleta[i].b;
-//             *bladB = oldB - *B;
-//         }
-//     }
-
-// }
 void Funkcja3() {
     //ofstream wyjscie("obrazProjekt.bin", ios::binary);
 
@@ -1119,7 +1087,7 @@ void Funkcja6() {
 
     // skorzytaj z algorytu median cut do dopasowania palety
     medianCut();
-    //zapiszPalete(wyjscie);
+    zapiszPalete(wyjscie);
 
     for (int x = 0; x < szerokosc / 2; x++) {
         for (int y = 0; y < wysokosc / 2; y++) {
@@ -1244,7 +1212,7 @@ void Funkcja7() {
 
         }
     }
-    dopiszDoPliku(wyjscie);
+    //dopiszDoPliku(wyjscie);
     wyswieltPalete();
 
     SDL_UpdateWindowSurface(window);
@@ -1342,7 +1310,7 @@ void Funkcja8() {
                 }
             }
             else{
-                indeks = indeksyRLE[i];
+                indeks = indeksy[i];
                 i++;
             }
 
@@ -1366,71 +1334,77 @@ int kompresjaRLE() {
     int i = 0;
     int rozmiar = 0;
     //dopoki wszystkie bajty nie sa skompresowane
-    try{
-        while (i < dlugosc)
-        {
-            //sekwencja powtarzania sie co najmniej 2 bajtow
-            if (i < dlugosc - 1 && indeksy[i] == indeksy[i + 1])
-            {
-                //mierzymy dlugosc sekwencji
-                int j = 0;
-                while ((i + j < dlugosc - 1 && indeksy[i + j] == indeksy[i + j + 1]) && j < 254)
-                {
-                    j++;
-                }
-                //wypisujemy spakowana sekwencje
-                indeksyRLE[rozmiar] = j + 1;
-                rozmiar++;
-                indeksyRLE[rozmiar] = i + j;
-                rozmiar++; 
-                // cout << j + 1 << ", " << indeksy[i + j] << ", ";
-                //przesuwamy wskaznik o dlugosc sekwencji 
-                i += (j + 1);
-            }
-            //sekwencja roznych bajtow 
-            else
-            {
-                //mierzymy dlugosc sekwencji
-                int j = 0;
-                while ((i + j < dlugosc - 1 && indeksy[i + j] != indeksy[i + j + 1]) && j < 254)
-                {
-                    j++;
-                }
-                //dodajemy jeszcze koncowke
-                if (i + j == dlugosc - 1 && j < 254)
-                {
-                    j++;
-                }
-                //wypisujemy spakowana sekwencje
-             //  cout << (int)0 << ", " << j << ", ";
-                for (int k = 0; k < j; k++)
-                {
-                    indeksyRLE[rozmiar] = i + k;
-                    rozmiar++;
-                    // cout << indeksy[i + k] << ", ";
-                }
 
-                if (j % 2 != 0)
-                {
-                    indeksyRLE[rozmiar] = 0;
-                    rozmiar++;
-                    // cout << (int)0 << ", ";
-                }
-                //przesuwamy wskaznik o dlugosc sekwencji
-                i += j;
+    while (i < dlugosc)
+    {
+        if (rozmiar > szerokosc / 2 * wysokosc / 2 - 100)
+            return INT_MAX;
+        //sekwencja powtarzania sie co najmniej 2 bajtow
+        if (i < dlugosc - 1 && indeksy[i] == indeksy[i + 1])
+        {
+            //mierzymy dlugosc sekwencji
+            int j = 0;
+            while ((i + j < dlugosc - 1 && indeksy[i + j] == indeksy[i + j + 1]) && j < 254)
+            {
+                j++;
             }
+            //wypisujemy spakowana sekwencje
+            indeksyRLE[rozmiar++] = j + 1;
+            indeksyRLE[rozmiar++] = i + j;
+            // cout << j + 1 << ", " << indeksy[i + j] << ", ";
+            //przesuwamy wskaznik o dlugosc sekwencji 
+            i += (j + 1);
         }
-    }catch(bad_alloc& e){
-        return INT_MAX;
+        //sekwencja roznych bajtow 
+        else
+        {
+            //mierzymy dlugosc sekwencji
+            int j = 0;
+            while ((i + j < dlugosc - 1 && indeksy[i + j] != indeksy[i + j + 1]) && j < 254)
+            {
+                j++;
+            }
+            //dodajemy jeszcze koncowke
+            if (i + j == dlugosc - 1 && j < 254)
+            {
+                j++;
+            }
+            //wypisujemy spakowana sekwencje
+            indeksyRLE[rozmiar++] = 0;
+            indeksyRLE[rozmiar++] = j;
+            //  cout << (int)0 << ", " << j << ", ";
+            for (int k = 0; k < j; k++)
+            {
+                indeksyRLE[rozmiar++] = i + k;
+                // cout << indeksy[i + k] << ", ";
+            }
+
+            if (j % 2 != 0)
+            {
+                indeksyRLE[rozmiar++] = 0;
+                // cout << (int)0 << ", ";
+            }
+            //przesuwamy wskaznik o dlugosc sekwencji
+            i += j;
+        }
+        cout << endl << rozmiar;
     }
+
     return rozmiar;
 }
 
 void dekompresjaRLE()
 {   
+    Uint8 liczba = 0;
+    int rozmiar = 0;
+    while (wejscie.read((char*)&liczba, sizeof(Uint8))) {
+        indeksyRLE[rozmiar++] = (int)liczba;
+    }
+
     int dlugosc = szerokosc/2 * wysokosc/2;
     int i = 0;
     int ile = 0;
+    int iterator = 0;
     //dopoki wszystkie bajty nie sa zdekompresowane
     while (i < dlugosc)
     {
@@ -1439,6 +1413,7 @@ void dekompresjaRLE()
         {
             for (int j = 0; j < indeksyRLE[i]; j++)
             {
+                indeksy[iterator++] = indeksyRLE[i + 1];
              //   cout << indeksyRLE[i + 1] << ", ";
             }
             //przesuwamy wskaznik o dlugosc sekwencji
@@ -1449,7 +1424,8 @@ void dekompresjaRLE()
             ile = indeksyRLE[i + 1];
             for (int j = 0; j < ile; j++)
             {
-             //   cout << indeksyRLE[i + 1 + j + 1] << ", ";
+                indeksy[iterator++] = indeksyRLE[i + 1 + j + 1];
+                //   cout << indeksyRLE[i + 1 + j + 1] << ", ";
             }
             //przesuwamy wskaznik o dlugosc sekwencji
             i += ile + 2;
