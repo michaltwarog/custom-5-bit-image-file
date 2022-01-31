@@ -15,7 +15,7 @@ SDL_Surface* screen = NULL;
 #define szerokosc 512
 #define wysokosc 340
 
-#define tytul "GKiM2021 - projekt"
+#define tytul "GKiM2021 - Rafal Matusiak, Szymon Nowak, Michal Twarog, Paulina Wyskiel"
 
 void setPixel(int x, int y, Uint8 R, Uint8 G, Uint8 B);
 SDL_Color getPixel(int x, int y);
@@ -79,7 +79,7 @@ const int wielkoscObrazka = szerokosc / 2 * wysokosc / 2; // wielkosc odczytywan
 SDL_Color paleta[wielkoscObrazka];                  // zawiera kolory wszystkich pikeseli 
 SDL_Color dopasowanaPaleta[32];                     // zawiera kolory pikseli dla danej konwersji
 int indeksy[wielkoscObrazka];                       // indeks koloru dla każdego pikesla obrazka              
-int indeksyRLE[wielkoscObrazka];                           // indeksy kolorów dla skompresowanego obrazka
+int indeksyRLE[wielkoscObrazka];                    // indeksy kolorów dla skompresowanego obrazka
 int ileKolorow = 0;                                 // ilość odnalezionych kolorów w obrazku
 int dopasowanychKolorow = 0;                        // ilość dopasowanych kolorów w obrazku
 int ileZapisanych = 0;                              // liczba zapisanych bitów do tablicy 40 bitów
@@ -183,7 +183,7 @@ void zapiszPlik(string def_name)
 }
 
 char* sprawdzanieNazwy(char nazwa[], int dlugoscNazwy) {
-	char rozszerzenie[] = ".bin";
+	char rozszerzenie[] = ".idk";
 	int dlCalkowita = dlugoscNazwy + 5;
 	char* nazwaFinalna = nullptr;
 	nazwaFinalna = new char[dlCalkowita + 1];
@@ -201,7 +201,7 @@ char* sprawdzanieNazwy(char nazwa[], int dlugoscNazwy) {
 			return nazwaFinalna;
 		}
 		else if (nazwa[i] == '.') {
-			if ((nazwa[i + 1] == 'b') && (nazwa[i + 2] == 'i') && (nazwa[i + 3] == 'n')) {
+			if ((nazwa[i + 1] == 'i') && (nazwa[i + 2] == 'd') && (nazwa[i + 3] == 'k')) {
 				return nazwa;
 			}
 		}
@@ -230,45 +230,59 @@ void zapis_test() {
 }
 
 void test() {
-    int czas = 1000;
+    int czas = 3000;
     string nazwa = "test.bin";
-    //wyjscie.open("test.bin", ios::binary);
-
+    Uint16 szerokoscObrazka = szerokosc / 2;
+    Uint16 wysokoscObrazka = wysokosc / 2;
     for (int i = 1; i <= 8; i++) {
         string obrazek = "obrazek1.bmp";
         obrazek[7] = i+48;
         zapiszPlik(nazwa);
         ladujBMP(obrazek.c_str(), 0, 0);
+        wyjscie.write((char*)&szerokoscObrazka, sizeof(Uint16));
+        wyjscie.write((char*)&wysokoscObrazka, sizeof(Uint16));
         Funkcja1();
         zapis_test();
         Funkcja8(nazwa);
         SDL_Delay(czas);
         zapiszPlik(nazwa);
+        wyjscie.write((char*)&szerokoscObrazka, sizeof(Uint16));
+        wyjscie.write((char*)&wysokoscObrazka, sizeof(Uint16));
         Funkcja2();
         zapis_test();
         Funkcja8(nazwa);
         SDL_Delay(czas);
         zapiszPlik(nazwa);
+        wyjscie.write((char*)&szerokoscObrazka, sizeof(Uint16));
+        wyjscie.write((char*)&wysokoscObrazka, sizeof(Uint16));
         Funkcja3();
         zapis_test();
         Funkcja8(nazwa);
         SDL_Delay(czas);
         zapiszPlik(nazwa);
+        wyjscie.write((char*)&szerokoscObrazka, sizeof(Uint16));
+        wyjscie.write((char*)&wysokoscObrazka, sizeof(Uint16));
         Funkcja4();
         zapis_test();
         Funkcja8(nazwa);
         SDL_Delay(czas);
         zapiszPlik(nazwa);
+        wyjscie.write((char*)&szerokoscObrazka, sizeof(Uint16));
+        wyjscie.write((char*)&wysokoscObrazka, sizeof(Uint16));
         Funkcja5();
         zapis_test();
         Funkcja8(nazwa);
         SDL_Delay(czas);
         zapiszPlik(nazwa);
+        wyjscie.write((char*)&szerokoscObrazka, sizeof(Uint16));
+        wyjscie.write((char*)&wysokoscObrazka, sizeof(Uint16));
         Funkcja6();
         zapis_test();
         Funkcja8(nazwa);
         SDL_Delay(czas);
         zapiszPlik(nazwa);
+        wyjscie.write((char*)&szerokoscObrazka, sizeof(Uint16));
+        wyjscie.write((char*)&wysokoscObrazka, sizeof(Uint16));
         Funkcja7();
         zapis_test();
         Funkcja8(nazwa);
@@ -279,8 +293,6 @@ void test() {
 
 void menu() {
    
-    //SDL_Event event;
-
     bool quit = true;
     while (quit)
     {
@@ -291,15 +303,17 @@ void menu() {
         bool metoda = 0;                //wybór między przesunięciem, a najbliższym sąsiadem (true - przesunięcia bitowe, false - najbliższy sąsiad)
         bool wybor = false;
         bool done = false;
+        Uint16 szerokoscObrazka = szerokosc / 2;
+        Uint16 wysokoscObrazka = wysokosc / 2;
 
-        //SDL_WaitEvent(&event);
-        waitEvent("1. Odczyt bmp\n2. Odczyt nasze\n", &odczyt);
+        waitEvent("1. Odczyt pliku .bmp\n2. Odczyt pliku .idk\n", &odczyt);
 
         if (odczyt)
         {
             zapiszPlik();
-
             wybierzObrazek();
+            wyjscie.write((char*)&szerokoscObrazka, sizeof(Uint16));
+            wyjscie.write((char*)&wysokoscObrazka, sizeof(Uint16));
 
 
             waitEvent("\nCzy obraz ma byc kolorowy?\n1. Tak\n2. Nie\n", &kolor);
@@ -448,13 +462,6 @@ void wybierzObrazek() {
     }
 // uzywana do debuggowania, wypisuje w konsoli wartosci kolorow
 void wypiszPalete() {
-
-    cout << "Zwykla:\n";
-    // for (int i = 0; i < ileKolorow; i++) {
-    //     cout << i << ": [" << (int)paleta[i].r << "," << (int)paleta[i].g << "," << (int)paleta[i].b << "]" << endl;
-
-    // }
-
 
     cout << "Dopasowana:\n";
     for (int i = 0; i < dopasowanychKolorow; i++) {
@@ -800,7 +807,8 @@ void createpaletteF1() {
                 dopasowanychKolorow++;
             }
         }
-    }   
+    }
+
 }
 
 //Funkcja wykonująca przesunięcie bitowe
@@ -817,8 +825,6 @@ void Funkcja1() {
     Uint8 wartosc = 0;
     int R, G, B;
     char wariant[] = "p"; 
-
-    //bw, przesunieta (1), dopasowana, narzucona
 
     cout << "1. Przesuniecie bitowe\n";
     wyjscie.write((char*)&wariant, sizeof(char));
@@ -1154,7 +1160,6 @@ void Funkcja6() {
             indeks = znajdzNajlbizszegoSasiada(kolor);
             indeksy[i] = indeks;
             i++;
-            //konwersja10na2(wyjscie, indeks);
             setPixel(x + szerokosc / 2, y, dopasowanaPaleta[indeks].r, dopasowanaPaleta[indeks].g, dopasowanaPaleta[indeks].b);
         }
     }
@@ -1307,8 +1312,8 @@ void odczytajPalete(ifstream& wejscie){
 //aktulnie funkcja odczytuje z pliku obraz zapisany za pomocą funkcji, w której wykonywane jest przesunięcie bitowe
 void Funkcja8(string def_name) {
 
-    Uint16 szerokoscObrazka = szerokosc / 2;
-    Uint16 wysokoscObrazka = wysokosc / 2;
+    Uint16 szerokoscObrazka = 0;
+    Uint16 wysokoscObrazka = 0;
     int R = 0, G = 0, B = 0;
     bool skladowa[40]{ 0 };
     int indeks = 0;
@@ -1318,6 +1323,8 @@ void Funkcja8(string def_name) {
     otworzPlik(def_name);
     cout << "8. Odczyt z pliku\n";
 
+    wejscie.read((char*)&szerokoscObrazka, sizeof(Uint16));
+    wejscie.read((char*)&wysokoscObrazka, sizeof(Uint16));
     wejscie.read((char*)&wariant, sizeof(char));
 
     switch((int)wariant[0]){
