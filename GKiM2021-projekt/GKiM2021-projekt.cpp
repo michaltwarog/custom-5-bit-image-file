@@ -18,6 +18,7 @@ SDL_Surface* screen = NULL;
 #define tytul "GKiM2021 - Rafal Matusiak, Szymon Nowak, Michal Twarog, Paulina Wyskiel"
 
 void setPixel(int x, int y, Uint8 R, Uint8 G, Uint8 B);
+void setPixelSurface(int x, int y, Uint8 R, Uint8 G, Uint8 B, SDL_Surface* surface);
 SDL_Color getPixel(int x, int y);
 
 void czyscEkran(Uint8 R, Uint8 G, Uint8 B);
@@ -51,6 +52,7 @@ void dekompresjaRLE();
 void konwersjaUint8naBool(ifstream& wejscie, bool* skladowa);
 
 void zapisz();
+void zapiszBMP(string nazwa);
 void zapiszRLE(int rozmiarRLE);
 void otworzPlik(string def_name = "");
 void zapiszPlik(string def_name = "");
@@ -232,61 +234,78 @@ void zapis_test() {
 void test() {
     int czas = 3000;
     string nazwa = "test.bin";
+    string nazwaBMP = "test.bmp";
     Uint16 szerokoscObrazka = szerokosc / 2;
     Uint16 wysokoscObrazka = wysokosc / 2;
     for (int i = 1; i <= 8; i++) {
-        string obrazek = "obrazek1.bmp";
-        obrazek[7] = i+48;
-        zapiszPlik(nazwa);
+        //string obrazek = "obrazek1.bmp";
+        //obrazek[7] = i+48;
+        string obrazek = "papuga.bmp";
         ladujBMP(obrazek.c_str(), 0, 0);
+        
+        zapiszPlik("przesuniecie.idk");
         wyjscie.write((char*)&szerokoscObrazka, sizeof(Uint16));
         wyjscie.write((char*)&wysokoscObrazka, sizeof(Uint16));
         Funkcja1();
         zapis_test();
-        Funkcja8(nazwa);
+        zapiszBMP("przesuniecie.bmp");
+        Funkcja8("przesuniecie.idk");
         SDL_Delay(czas);
-        zapiszPlik(nazwa);
+
+        zapiszPlik("najblizszy_sasiad.idk");
         wyjscie.write((char*)&szerokoscObrazka, sizeof(Uint16));
         wyjscie.write((char*)&wysokoscObrazka, sizeof(Uint16));
         Funkcja2();
         zapis_test();
-        Funkcja8(nazwa);
+        zapiszBMP("najblizszy_sasiad.bmp");
+        Funkcja8("najblizszy_sasiad.idk");
         SDL_Delay(czas);
-        zapiszPlik(nazwa);
+
+        zapiszPlik("dithering_narzucona.idk");
         wyjscie.write((char*)&szerokoscObrazka, sizeof(Uint16));
         wyjscie.write((char*)&wysokoscObrazka, sizeof(Uint16));
         Funkcja3();
         zapis_test();
-        Funkcja8(nazwa);
+        zapiszBMP("dithering_narzucona.bmp");
+        Funkcja8("dithering_narzucona.idk");
         SDL_Delay(czas);
-        zapiszPlik(nazwa);
+
+        zapiszPlik("skala_szarosci.idk");
         wyjscie.write((char*)&szerokoscObrazka, sizeof(Uint16));
         wyjscie.write((char*)&wysokoscObrazka, sizeof(Uint16));
         Funkcja4();
         zapis_test();
-        Funkcja8(nazwa);
+        zapiszBMP("skala_szarosci.bmp");
+        Funkcja8("skala_szarosci.idk");
         SDL_Delay(czas);
-        zapiszPlik(nazwa);
+
+        zapiszPlik("skala_szarosci_dithering.idk");
         wyjscie.write((char*)&szerokoscObrazka, sizeof(Uint16));
         wyjscie.write((char*)&wysokoscObrazka, sizeof(Uint16));
         Funkcja5();
         zapis_test();
-        Funkcja8(nazwa);
+        zapiszBMP("skala_szarosci_dithering.bmp");
+        Funkcja8("skala_szarosci_dithering.idk");
         SDL_Delay(czas);
-        zapiszPlik(nazwa);
+
+        zapiszPlik("nablizszy_sasiad_dopasowana.idk");
         wyjscie.write((char*)&szerokoscObrazka, sizeof(Uint16));
         wyjscie.write((char*)&wysokoscObrazka, sizeof(Uint16));
         Funkcja6();
         zapis_test();
-        Funkcja8(nazwa);
+        zapiszBMP("nablizszy_sasiad_dopasowana.bmp");
+        Funkcja8("nablizszy_sasiad_dopasowana.idk");
         SDL_Delay(czas);
-        zapiszPlik(nazwa);
+
+        zapiszPlik("dopasowana_dithering.idk");
         wyjscie.write((char*)&szerokoscObrazka, sizeof(Uint16));
         wyjscie.write((char*)&wysokoscObrazka, sizeof(Uint16));
         Funkcja7();
         zapis_test();
-        Funkcja8(nazwa);
+        zapiszBMP("dopasowana_dithering.bmp");
+        Funkcja8("dopasowana_dithering.idk");
         SDL_Delay(czas);
+
     }
 }
 
@@ -711,6 +730,25 @@ int znajdzNajlbizszegoSasiada(SDL_Color kolor) {
     }
 
     return minIndeks;
+}
+
+void zapiszBMP(string nazwa) {
+    SDL_Surface* surf;
+    SDL_Color kolor;
+
+    surf = SDL_CreateRGBSurfaceWithFormat(0, szerokosc / 2, wysokosc / 2, 24, SDL_PIXELFORMAT_RGB24);
+    
+    int i = 0;
+    for (int x = 0; x < szerokosc / 2; x++) {
+        for (int y = 0; y < wysokosc / 2; y++) {
+            kolor = dopasowanaPaleta[indeksy[i]];
+            setPixelSurface(x, y, kolor.r, kolor.g, kolor.b, surf);
+            i++;
+        }
+    }
+
+    SDL_SaveBMP(surf, nazwa.c_str());
+    SDL_FreeSurface(surf);
 }
 
 //Funkcja zapisuje dane do pliku zamieniając wcześniej dane z postaci binarnej na postać dziesiętną
@@ -1618,18 +1656,18 @@ void setPixel(int x, int y, Uint8 R, Uint8 G, Uint8 B)
     }
 }
 
-void setPixelSurface(int x, int y, Uint8 R, Uint8 G, Uint8 B)
+void setPixelSurface(int x, int y, Uint8 R, Uint8 G, Uint8 B, SDL_Surface* surface = screen)
 {
     if ((x >= 0) && (x < szerokosc * 2) && (y >= 0) && (y < wysokosc * 2))
     {
         /* Zamieniamy poszczególne składowe koloru na format koloru piksela */
-        Uint32 pixel = SDL_MapRGB(screen->format, R, G, B);
+        Uint32 pixel = SDL_MapRGB(surface->format, R, G, B);
 
         /* Pobieramy informację ile bajtów zajmuje jeden piksel */
-        int bpp = screen->format->BytesPerPixel;
+        int bpp = surface->format->BytesPerPixel;
 
         /* Obliczamy adres piksela */
-        Uint8* p = (Uint8*)screen->pixels + y * screen->pitch + x * bpp;
+        Uint8* p = (Uint8*)surface->pixels + y * surface->pitch + x * bpp;
 
         /* Ustawiamy wartość piksela, w zależności od formatu powierzchni*/
         switch (bpp)
@@ -1763,7 +1801,7 @@ int main(int argc, char* argv[]) {
     bool done = false;
     SDL_Event event;
 
-    //test();
+    test();
     menu(); //wywołanie aplikacji
 
     if (screen) {
