@@ -237,7 +237,7 @@ void test() {
     string nazwaBMP = "test.bmp";
     Uint16 szerokoscObrazka = szerokosc / 2;
     Uint16 wysokoscObrazka = wysokosc / 2;
-    for (int i = 1; i <= 8; i++) {
+    //for (int i = 1; i <= 8; i++) {
         //string obrazek = "obrazek1.bmp";
         //obrazek[7] = i+48;
         string obrazek = "papuga.bmp";
@@ -306,7 +306,7 @@ void test() {
         Funkcja8("dopasowana_dithering.idk");
         SDL_Delay(czas);
 
-    }
+    //}
 }
 
 
